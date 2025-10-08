@@ -1,0 +1,27 @@
+<div class="card shadow-sm">
+  <div class="card-body p-4">
+    <div class="text-center mb-4">
+      <img src="<%= siteStyles.logoPath || '/images/default-logo.svg' %>" alt="Artist Logo" height="60" class="mb-3">
+      <h2>Admin Login</h2>
+      <p class="text-muted">Enter your credentials to access the dashboard</p>
+    </div>
+    
+    <form action="/login" method="POST">
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" name="email" required>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password" required>
+      </div>
+      <div class="d-grid">
+        <button type="submit" class="btn btn-primary">Login</button>
+      </div>
+    </form>
+    
+    <div class="text-center mt-4">
+      <a href="/" class="text-decoration-none">← Back to Website</a>
+    </div>
+  </div>
+</div>

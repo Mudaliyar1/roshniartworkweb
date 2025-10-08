@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <style>
+    .brush {
+      animation: paint 3s infinite alternate;
+    }
+    .palette {
+      animation: rotate 5s infinite alternate;
+    }
+    .paint-drop {
+      animation: drip 2s infinite;
+    }
+    @keyframes paint {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(100px, 50px); }
+    }
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(10deg); }
+    }
+    @keyframes drip {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(30px); opacity: 0; }
+    }
+  </style>
+  
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#f8f9fa"/>
+  
+  <!-- Canvas -->
+  <rect x="200" y="100" width="400" height="300" fill="white" stroke="#ddd" stroke-width="10"/>
+  
+  <!-- Palette -->
+  <ellipse cx="150" cy="350" rx="80" ry="60" fill="#e9ecef" stroke="#495057" stroke-width="2" class="palette"/>
+  <circle cx="120" cy="330" r="15" fill="#dc3545"/> <!-- Red -->
+  <circle cx="150" cy="320" r="15" fill="#fd7e14"/> <!-- Orange -->
+  <circle cx="180" cy="330" r="15" fill="#ffc107"/> <!-- Yellow -->
+  <circle cx="130" cy="360" r="15" fill="#28a745"/> <!-- Green -->
+  <circle cx="160" cy="370" r="15" fill="#007bff"/> <!-- Blue -->
+  <circle cx="190" cy="360" r="15" fill="#6f42c1"/> <!-- Purple -->
+  
+  <!-- Brush -->
+  <g class="brush">
+    <rect x="600" y="200" width="10" height="150" fill="#8b4513" rx="2"/>
+    <path d="M 600 200 Q 605 180 610 200" fill="#8b4513"/>
+    <rect x="595" y="180" width="20" height="20" fill="#8b4513" rx="2"/>
+    <rect x="595" y="160" width="20" height="20" fill="#007bff" rx="5"/>
+    <circle cx="605" cy="150" r="3" fill="#007bff" class="paint-drop"/>
+    <circle cx="605" cy="160" r="3" fill="#007bff" class="paint-drop"/>
+  </g>
+  
+  <!-- Art in progress -->
+  <path d="M 300 250 Q 400 150 500 250" stroke="#007bff" stroke-width="5" fill="none"/>
+  <path d="M 350 300 Q 400 350 450 300" stroke="#28a745" stroke-width="5" fill="none"/>
+  <circle cx="400" cy="200" r="30" fill="#ffc107" opacity="0.7"/>
+</svg>

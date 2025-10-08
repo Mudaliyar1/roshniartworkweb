@@ -1,0 +1,13 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <h1 class="h2"><%= title %></h1>
+  <div class="btn-toolbar mb-2 mb-md-0">
+    <% if (title === 'Manage Artworks') { %>
+      <a href="/admin/artworks/new" class="btn btn-sm btn-primary">
+        <i class="bi bi-plus-lg"></i> Add New Artwork
+      </a>
+    <% } %>
+    <a href="/" class="btn btn-sm btn-outline-secondary ms-2" target="_blank">
+      <i class="bi bi-eye"></i> View Site
+    </a>
+  </div>
+</div>

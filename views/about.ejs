@@ -1,0 +1,34 @@
+<div class="container py-5">
+  <div class="row">
+    <div class="col-lg-4 mb-4 mb-lg-0">
+      <img src="<%= (typeof about !== 'undefined' && about.profileImage) ? about.profileImage : '/uploads/images/profile-placeholder.jpg' %>" alt="Artist Profile" class="img-fluid rounded shadow-sm">
+      
+      <div class="mt-4">
+        <h4>Connect With Me</h4>
+        <div class="d-flex gap-3 mt-3">
+          <a href="<%= (typeof about !== 'undefined' && about.instagram) ? about.instagram : '#' %>" class="text-decoration-none fs-4" target="_blank"><i class="bi bi-instagram"></i></a>
+          <a href="<%= (typeof about !== 'undefined' && about.youtube) ? about.youtube : '#' %>" class="text-decoration-none fs-4" target="_blank"><i class="bi bi-youtube"></i></a>
+          <a href="<%= (typeof about !== 'undefined' && about.facebook) ? about.facebook : '#' %>" class="text-decoration-none fs-4" target="_blank"><i class="bi bi-facebook"></i></a>
+          <a href="<%= (typeof about !== 'undefined' && about.twitter) ? about.twitter : '#' %>" class="text-decoration-none fs-4" target="_blank"><i class="bi bi-twitter"></i></a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-lg-8">
+      <h1 class="mb-4">About Me</h1>
+      
+      <div class="about-content">
+        <% if (about && about.content) { %>
+          <%- about.content %>
+        <% } else { %>
+          <p class="lead">Hello, I'm an artist passionate about creating meaningful artwork.</p>
+          <p>I specialize in drawings and mixed media art that explores themes of nature, human emotions, and the intersection of reality and imagination.</p>
+          <p>My artistic journey began when I was a child, fascinated by colors and shapes. Over the years, I've developed my skills through formal education and continuous practice, always seeking to push the boundaries of my creativity.</p>
+          <p>Each piece I create tells a story, capturing moments of beauty, introspection, or social commentary. I believe art has the power to connect people across different backgrounds and experiences, creating a universal language that speaks to our shared humanity.</p>
+          <p>When I'm not in my studio, I enjoy teaching art to young students, hiking in nature to find inspiration, and collaborating with other artists on community projects.</p>
+          <p>Thank you for visiting my portfolio. I hope my work resonates with you and perhaps even inspires your own creative journey.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>

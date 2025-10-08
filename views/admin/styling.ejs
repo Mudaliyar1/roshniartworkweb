@@ -1,0 +1,95 @@
+<%- include('../partials/messages') %>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Site Styling Options</h4>
+        </div>
+        <div class="card-body">
+          <form action="/admin/styling" method="POST">
+            <div class="row">
+              <div class="col-md-6">
+                <h5>Colors</h5>
+                <div class="form-group mb-3">
+                  <label for="primaryColor">Primary Color</label>
+                  <input type="color" class="form-control" id="primaryColor" name="primaryColor" value="<%= siteStyles.primaryColor %>">
+                </div>
+                <div class="form-group mb-3">
+                  <label for="secondaryColor">Secondary Color</label>
+                  <input type="color" class="form-control" id="secondaryColor" name="secondaryColor" value="<%= siteStyles.secondaryColor %>">
+                </div>
+                <div class="form-group mb-3">
+                  <label for="backgroundColor">Background Color</label>
+                  <input type="color" class="form-control" id="backgroundColor" name="backgroundColor" value="<%= siteStyles.backgroundColor %>">
+                </div>
+                <div class="form-group mb-3">
+                  <label for="headerTextColor">Header Text Color</label>
+                  <input type="color" class="form-control" id="headerTextColor" name="headerTextColor" value="<%= siteStyles.headerTextColor %>">
+                </div>
+                <div class="form-group mb-3">
+                  <label for="footerTextColor">Footer Text Color</label>
+                  <input type="color" class="form-control" id="footerTextColor" name="footerTextColor" value="<%= siteStyles.footerTextColor %>">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <h5>Typography</h5>
+                <div class="form-group mb-3">
+                  <label for="fontFamily">Font Family</label>
+                  <select class="form-control" id="fontFamily" name="fontFamily">
+                    <option value="Montserrat" <%= siteStyles.fontFamily === 'Montserrat' ? 'selected' : '' %>>Montserrat</option>
+                    <option value="Inter" <%= siteStyles.fontFamily === 'Inter' ? 'selected' : '' %>>Inter</option>
+                    <option value="Roboto" <%= siteStyles.fontFamily === 'Roboto' ? 'selected' : '' %>>Roboto</option>
+                    <option value="Open Sans" <%= siteStyles.fontFamily === 'Open Sans' ? 'selected' : '' %>>Open Sans</option>
+                    <option value="Lato" <%= siteStyles.fontFamily === 'Lato' ? 'selected' : '' %>>Lato</option>
+                  </select>
+                </div>
+                <div class="form-group mb-3">
+                  <label for="baseFontSize">Base Font Size (px)</label>
+                  <input type="number" class="form-control" id="baseFontSize" name="baseFontSize" value="<%= siteStyles.baseFontSize %>" min="12" max="24">
+                </div>
+                <div class="form-group mb-3">
+                  <label for="headingScale">Heading Scale</label>
+                  <input type="number" class="form-control" id="headingScale" name="headingScale" value="<%= siteStyles.headingScale %>" min="1.1" max="1.5" step="0.1">
+                </div>
+                <div class="form-group mb-3">
+                  <label for="buttonRadius">Button Radius (px)</label>
+                  <input type="number" class="form-control" id="buttonRadius" name="buttonRadius" value="<%= siteStyles.buttonRadius %>" min="0" max="20">
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group mt-4">
+              <label for="logoPath">Logo Path</label>
+              <input type="text" class="form-control" id="logoPath" name="logoPath" value="<%= siteStyles.logoPath %>">
+              <small class="form-text text-muted">Path to your logo file (e.g., /images/logo.svg)</small>
+            </div>
+            
+            <div class="form-group mt-4">
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+              <button type="button" class="btn btn-secondary" id="previewChanges">Preview Changes</button>
+              <button type="reset" class="btn btn-outline-secondary">Reset</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Preview functionality could be added here
+    document.getElementById('previewChanges').addEventListener('click', function() {
+      // Apply styling changes temporarily for preview
+      const primaryColor = document.getElementById('primaryColor').value;
+      const secondaryColor = document.getElementById('secondaryColor').value;
+      const backgroundColor = document.getElementById('backgroundColor').value;
+      const fontFamily = document.getElementById('fontFamily').value;
+      
+      // Show preview notification
+      alert('Preview functionality will be implemented in a future update.');
+    });
+  });
+</script>

@@ -1,0 +1,63 @@
+<div class="container py-5">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h1 class="mb-4">Contact Me</h1>
+      
+      <div class="card shadow-sm mb-5">
+        <div class="card-body p-4">
+          <form action="/contact" method="POST">
+            <div class="mb-3">
+              <label for="name" class="form-label">Your Name</label>
+              <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            
+            <div class="mb-3">
+              <label for="email" class="form-label">Your Email</label>
+              <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            
+            <div class="mb-3">
+              <label for="subject" class="form-label">Subject</label>
+              <input type="text" class="form-control" id="subject" name="subject" required>
+            </div>
+            
+            <div class="mb-3">
+              <label for="message" class="form-label">Message</label>
+              <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+            </div>
+            
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">Send Message</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="text-center">
+            <i class="bi bi-envelope-fill fs-1 mb-3"></i>
+            <h5>Email</h5>
+            <p><a href="mailto:contact@example.com" class="text-decoration-none">contact@example.com</a></p>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="text-center">
+            <i class="bi bi-geo-alt-fill fs-1 mb-3"></i>
+            <h5>Location</h5>
+            <p>New Delhi, India</p>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="text-center">
+            <i class="bi bi-instagram fs-1 mb-3"></i>
+            <h5>Social Media</h5>
+            <p><a href="https://instagram.com/example" target="_blank" class="text-decoration-none">@artisthandle</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

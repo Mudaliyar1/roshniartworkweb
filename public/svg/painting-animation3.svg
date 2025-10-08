@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <style>
+    .floating {
+      animation: float 4s ease-in-out infinite;
+    }
+    .rotating {
+      animation: rotate 8s linear infinite;
+    }
+    .pulsing {
+      animation: pulse 3s infinite alternate;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.8; }
+      100% { transform: scale(1.1); opacity: 1; }
+    }
+  </style>
+  
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#f0f8ff"/>
+  
+  <!-- Abstract Art Elements -->
+  <circle cx="400" cy="250" r="150" fill="#f8f9fa" stroke="#dee2e6" stroke-width="5" class="rotating"/>
+  
+  <!-- Floating Art Tools -->
+  <g class="floating" style="animation-delay: -1s;">
+    <rect x="200" y="150" width="10" height="120" fill="#6c757d" rx="2"/>
+    <rect x="195" y="130" width="20" height="20" fill="#ff6b6b" rx="5"/>
+  </g>
+  
+  <g class="floating" style="animation-delay: -2s;">
+    <rect x="550" y="200" width="10" height="120" fill="#6c757d" rx="2"/>
+    <rect x="545" y="180" width="20" height="20" fill="#4ecdc4" rx="5"/>
+  </g>
+  
+  <!-- Color Splashes -->
+  <circle cx="300" cy="200" r="40" fill="#ff6b6b" opacity="0.7" class="pulsing"/>
+  <circle cx="500" cy="200" r="30" fill="#4ecdc4" opacity="0.7" class="pulsing" style="animation-delay: -1s;"/>
+  <circle cx="350" cy="300" r="35" fill="#ffe66d" opacity="0.7" class="pulsing" style="animation-delay: -2s;"/>
+  <circle cx="450" cy="300" r="25" fill="#1a535c" opacity="0.7" class="pulsing" style="animation-delay: -3s;"/>
+  
+  <!-- Abstract Lines -->
+  <path d="M 250 250 Q 400 100 550 250" stroke="#ff6b6b" stroke-width="3" fill="none"/>
+  <path d="M 250 300 Q 400 450 550 300" stroke="#4ecdc4" stroke-width="3" fill="none"/>
+  
+  <!-- Central Element -->
+  <g class="rotating" style="transform-origin: 400px 250px; animation-duration: 12s;">
+    <polygon points="400,180 420,230 480,230 430,260 450,320 400,290 350,320 370,260 320,230 380,230" 
+             fill="none" stroke="#1a535c" stroke-width="2"/>
+  </g>
+</svg>

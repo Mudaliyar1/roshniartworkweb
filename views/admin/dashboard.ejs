@@ -1,0 +1,151 @@
+<!-- Stats Cards -->
+<div class="row mb-4">
+  <div class="col-md-4">
+    <div class="card text-white bg-primary mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="card-title">Total Artworks</h6>
+            <h2 class="mb-0"><%= stats.artworkCount %></h2>
+          </div>
+          <i class="bi bi-image fs-1"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="card text-white bg-success mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="card-title">Messages</h6>
+            <h2 class="mb-0"><%= stats.messageCount %></h2>
+            <small><%= stats.unreadMessageCount %> unread</small>
+          </div>
+          <i class="bi bi-envelope fs-1"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="card text-white bg-info mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="card-title">Media Files</h6>
+            <h2 class="mb-0"><%= stats.mediaCount %></h2>
+          </div>
+          <i class="bi bi-file-earmark-image fs-1"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row mb-4">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Recent Artworks</h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+          <% if (recentArtworks && recentArtworks.length > 0) { %>
+            <% recentArtworks.forEach(artwork => { %>
+              <a href="/admin/artworks/<%= artwork._id %>/edit" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="mb-1"><%= artwork.title %></h6>
+                  <small class="text-muted"><%= new Date(artwork.createdAt).toLocaleDateString() %></small>
+                </div>
+                <small class="text-muted">
+                  <%= artwork.isVisible ? 'Public' : 'Hidden' %> • 
+                  <%= artwork.images.length %> images
+                </small>
+              </a>
+            <% }); %>
+          <% } else { %>
+            <div class="list-group-item text-center py-3">
+              <p class="mb-0">No artworks yet</p>
+            </div>
+          <% } %>
+        </div>
+      </div>
+      <div class="card-footer text-center">
+        <a href="/admin/artworks" class="btn btn-sm btn-outline-primary">View All Artworks</a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Recent Messages</h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+          <% if (recentMessages && recentMessages.length > 0) { %>
+            <% recentMessages.forEach(message => { %>
+              <a href="/admin/messages/<%= message._id %>" class="list-group-item list-group-item-action <%= !message.isRead ? 'list-group-item-light' : '' %>">
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="mb-1"><%= message.subject %></h6>
+                  <small class="text-muted"><%= new Date(message.createdAt).toLocaleDateString() %></small>
+                </div>
+                <p class="mb-1 text-truncate"><%= message.message.substring(0, 100) %></p>
+                <small class="text-muted">From: <%= message.name %> (<%= message.email %>)</small>
+              </a>
+            <% }); %>
+          <% } else { %>
+            <div class="list-group-item text-center py-3">
+              <p class="mb-0">No messages yet</p>
+            </div>
+          <% } %>
+        </div>
+      </div>
+      <div class="card-footer text-center">
+        <a href="/admin/messages" class="btn btn-sm btn-outline-primary">View All Messages</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Quick Actions</h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <a href="/admin/artworks/new" class="btn btn-outline-primary d-block py-3">
+              <i class="bi bi-plus-lg mb-2 d-block fs-4"></i>
+              Add New Artwork
+            </a>
+          </div>
+          <div class="col-md-3">
+            <a href="/admin/styling" class="btn btn-outline-primary d-block py-3">
+              <i class="bi bi-palette mb-2 d-block fs-4"></i>
+              Update Site Styling
+            </a>
+          </div>
+          <div class="col-md-3">
+            <a href="/admin/messages" class="btn btn-outline-primary d-block py-3">
+              <i class="bi bi-envelope mb-2 d-block fs-4"></i>
+              Check Messages
+            </a>
+          </div>
+          <div class="col-md-3">
+            <a href="/" target="_blank" class="btn btn-outline-secondary d-block py-3">
+              <i class="bi bi-eye mb-2 d-block fs-4"></i>
+              View Website
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

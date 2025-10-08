@@ -1,0 +1,149 @@
+<!-- Search and Filter -->
+<div class="card mb-4">
+  <div class="card-body">
+    <form action="/admin/artworks" method="GET" class="row g-3">
+      <div class="col-md-4">
+        <label for="search" class="form-label">Search</label>
+        <input type="text" class="form-control" id="search" name="search" placeholder="Search by title..." value="<%= search || '' %>">
+      </div>
+      <div class="col-md-3">
+        <label for="tag" class="form-label">Filter by Tag</label>
+        <select class="form-select" id="tag" name="tag">
+          <option value="">All Tags</option>
+          <% if (tags && tags.length > 0) { %>
+            <% tags.forEach(t => { %>
+              <option value="<%= t %>" <%= tag === t ? 'selected' : '' %>><%= t %></option>
+            <% }); %>
+          <% } %>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label for="visibility" class="form-label">Visibility</label>
+        <select class="form-select" id="visibility" name="visibility">
+          <option value="">All</option>
+          <option value="visible" <%= visibility === 'visible' ? 'selected' : '' %>>Public</option>
+          <option value="hidden" <%= visibility === 'hidden' ? 'selected' : '' %>>Hidden</option>
+        </select>
+      </div>
+      <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">Filter</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Artworks Table -->
+<div class="card">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th style="width: 80px;">Image</th>
+            <th>Title</th>
+            <th>Year</th>
+            <th>Tags</th>
+            <th>Status</th>
+            <th style="width: 150px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (artworks && artworks.length > 0) { %>
+            <% artworks.forEach(artwork => { %>
+              <tr>
+                <td>
+                  <% const mainImage = artwork.images.find(img => img.isMain) || artwork.images[0]; %>
+                  <% if (mainImage) { %>
+                    <img src="<%= mainImage.thumbnailPath || mainImage.path %>" alt="<%= artwork.title %>" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                  <% } else { %>
+                    <div class="bg-secondary" style="width: 60px; height: 60px;"></div>
+                  <% } %>
+                </td>
+                <td>
+                  <%= artwork.title %>
+                  <small class="d-block text-muted">/<%= artwork.slug %></small>
+                </td>
+                <td><%= artwork.year %></td>
+                <td>
+                  <% artwork.tags.slice(0, 3).forEach(tag => { %>
+                    <span class="badge bg-light text-dark"><%= tag %></span>
+                  <% }); %>
+                  <% if (artwork.tags.length > 3) { %>
+                    <span class="badge bg-light text-dark">+<%= artwork.tags.length - 3 %></span>
+                  <% } %>
+                </td>
+                <td>
+                  <span class="badge <%= artwork.visibility === 'public' ? 'bg-success' : 'bg-secondary' %>">
+                    <%= artwork.visibility === 'public' ? 'Public' : 'Hidden' %>
+                  </span>
+                </td>
+                <td>
+                  <div class="btn-group btn-group-sm">
+                    <a href="/admin/artworks/<%= artwork._id %>/edit" class="btn btn-outline-primary">Edit</a>
+                    <a href="/gallery/<%= artwork.slug %>" target="_blank" class="btn btn-outline-secondary">View</a>
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal<%= artwork._id %>">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                  
+                  <!-- Delete Modal -->
+                  <div class="modal fade" id="deleteModal<%= artwork._id %>" tabindex="-1" aria-labelledby="deleteModalLabel<%= artwork._id %>" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="deleteModalLabel<%= artwork._id %>">Confirm Deletion</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          Are you sure you want to delete "<%= artwork.title %>"? This action cannot be undone.
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                          <form action="/admin/artworks/<%= artwork._id %>?_method=DELETE" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr>
+              <td colspan="6" class="text-center py-4">
+                <p class="mb-0">No artworks found</p>
+                <a href="/admin/artworks/new" class="btn btn-sm btn-primary mt-2">Add New Artwork</a>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Pagination -->
+<% if (totalPages > 1) { %>
+  <div class="d-flex justify-content-center mt-4">
+    <nav aria-label="Artwork pagination">
+      <ul class="pagination">
+        <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+          <a class="page-link" href="/admin/artworks?page=<%= currentPage - 1 %><%= search ? '&search=' + search : '' %><%= tag ? '&tag=' + tag : '' %><%= visibility ? '&visibility=' + visibility : '' %>" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+        <% for(let i = 1; i <= totalPages; i++) { %>
+          <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+            <a class="page-link" href="/admin/artworks?page=<%= i %><%= search ? '&search=' + search : '' %><%= tag ? '&tag=' + tag : '' %><%= visibility ? '&visibility=' + visibility : '' %>"><%= i %></a>
+          </li>
+        <% } %>
+        <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+          <a class="page-link" href="/admin/artworks?page=<%= currentPage + 1 %><%= search ? '&search=' + search : '' %><%= tag ? '&tag=' + tag : '' %><%= visibility ? '&visibility=' + visibility : '' %>" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+<% } %>

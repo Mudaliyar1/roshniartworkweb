@@ -1,0 +1,53 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Directory for uploaded media
+public/uploads/images/*
+public/uploads/thumbnails/*
+public/uploads/videos/*
+!public/uploads/images/.gitkeep
+!public/uploads/thumbnails/.gitkeep
+!public/uploads/videos/.gitkeep
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Build output
+dist/
+build/
+
+# IDE and editor folders
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# MongoDB local data
+data/db/
+
+# Temporary files
+tmp/
+temp/

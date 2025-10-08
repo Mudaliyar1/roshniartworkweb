@@ -1,0 +1,177 @@
+<div class="container py-5">
+  <div class="row mb-4">
+    <div class="col-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item"><a href="/gallery">Gallery</a></li>
+          <li class="breadcrumb-item active" aria-current="page"><%= artwork.title %></li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Artwork Images -->
+    <div class="col-lg-8 mb-4">
+      <% if (artwork.images && artwork.images.length > 0) { %>
+        <div id="artworkCarousel" class="carousel slide mb-4" data-bs-ride="false">
+          <div class="carousel-inner">
+            <% artwork.images.forEach((image, index) => { %>
+              <div class="carousel-item <%= index === 0 ? 'active' : '' %>" style="height: 500px;">
+                <img src="<%= image.path %>" class="d-block w-100 h-100" style="object-fit: contain;" alt="<%= artwork.title %> - Image <%= index + 1 %>">
+              </div>
+            <% }); %>
+          </div>
+          <% if (artwork.images.length > 1) { %>
+            <button class="carousel-control-prev" type="button" data-bs-target="#artworkCarousel" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#artworkCarousel" data-bs-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Next</span>
+            </button>
+          <% } %>
+        </div>
+
+        <% if (artwork.images.length > 1) { %>
+          <div class="row g-2 mb-4">
+            <% artwork.images.forEach((image, index) => { %>
+              <div class="col-3 col-md-2">
+                <img src="<%= image.thumbnailPath || image.path %>" class="img-thumbnail cursor-pointer" 
+                     style="height: 60px; object-fit: cover; cursor: pointer;" 
+                     data-bs-target="#artworkCarousel" data-bs-slide-to="<%= index %>" 
+                     alt="Thumbnail <%= index + 1 %>">
+              </div>
+            <% }); %>
+          </div>
+        <% } %>
+      <% } %>
+
+      <!-- Video if available -->
+      <% if (artwork.video && (artwork.video.path || artwork.video.embedUrl)) { %>
+        <div class="mt-4 video-section">
+          <h4 class="mb-3">Video</h4>
+          <div class="card">
+            <div class="card-body">
+              <% if (artwork.video.type === 'file' && artwork.video.path) { %>
+                <div class="ratio ratio-16x9">
+                  <video controls class="w-100">
+                    <source src="<%= artwork.video.path %>" type="video/mp4">
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              <% } else if (artwork.video.type === 'embed' && artwork.video.embedUrl) { %>
+                <div class="ratio ratio-16x9">
+                  <iframe src="<%= artwork.video.embedUrl %>" title="<%= artwork.title %> video" allowfullscreen></iframe>
+                </div>
+              <% } else if (artwork.video.type === 'upload' && artwork.video.path) { %>
+                <div class="ratio ratio-16x9">
+                  <video controls class="w-100">
+                    <source src="<%= artwork.video.path %>" type="video/mp4">
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Artwork Details -->
+    <div class="col-lg-4">
+      <h1 class="mb-3"><%= artwork.title %></h1>
+      <p class="text-muted mb-4"><%= artwork.year %></p>
+      
+      <div class="mb-4">
+        <% artwork.tags.forEach(tag => { %>
+          <a href="/gallery?tag=<%= tag %>" class="badge bg-light text-dark text-decoration-none me-1 mb-1"><%= tag %></a>
+        <% }); %>
+      </div>
+      
+      <div class="mb-4">
+        <h4>Description</h4>
+        <div class="artwork-description">
+          <%- artwork.description %>
+        </div>
+      </div>
+      
+      <div class="d-grid gap-2">
+        <a href="/gallery" class="btn btn-outline-primary">Back to Gallery</a>
+        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#shareModal">
+          <i class="bi bi-share"></i> Share
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Artworks -->
+  <% if (relatedArtworks && relatedArtworks.length > 0) { %>
+    <div class="row mt-5">
+      <div class="col-12">
+        <h3 class="mb-4">Related Artworks</h3>
+      </div>
+      
+      <% relatedArtworks.forEach(related => { %>
+        <div class="col-md-4 mb-4">
+          <div class="card h-100 shadow-sm">
+            <% const mainImage = related.images.find(img => img.isMain) || related.images[0]; %>
+            <% if (mainImage) { %>
+              <img src="<%= mainImage.thumbnailPath || mainImage.path %>" class="card-img-top" alt="<%= related.title %>" style="height: 200px; object-fit: cover;">
+            <% } else { %>
+              <div class="bg-secondary" style="height: 200px;"></div>
+            <% } %>
+            <div class="card-body">
+              <h5 class="card-title"><%= related.title %></h5>
+              <p class="card-text text-muted"><%= related.year %></p>
+              <a href="/gallery/<%= related.slug %>" class="btn btn-sm btn-outline-primary">View Details</a>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+</div>
+
+<!-- Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="shareModalLabel">Share this Artwork</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" id="shareUrl" value="<%= baseUrl %>/gallery/<%= artwork.slug %>" readonly>
+          <button class="btn btn-outline-primary" type="button" id="copyShareUrl">Copy</button>
+        </div>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+          <a href="https://www.facebook.com/sharer/sharer.php?u=<%= encodeURIComponent(baseUrl + '/gallery/' + artwork.slug) %>" target="_blank" class="btn btn-outline-primary">
+            <i class="bi bi-facebook"></i>
+          </a>
+          <a href="https://twitter.com/intent/tweet?url=<%= encodeURIComponent(baseUrl + '/gallery/' + artwork.slug) %>&text=<%= encodeURIComponent('Check out this artwork: ' + artwork.title) %>" target="_blank" class="btn btn-outline-primary">
+            <i class="bi bi-twitter"></i>
+          </a>
+          <a href="https://pinterest.com/pin/create/button/?url=<%= encodeURIComponent(baseUrl + '/gallery/' + artwork.slug) %>&media=<%= encodeURIComponent(baseUrl + (artwork.images[0] ? artwork.images[0].path : '')) %>&description=<%= encodeURIComponent(artwork.title) %>" target="_blank" class="btn btn-outline-primary">
+            <i class="bi bi-pinterest"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('copyShareUrl').addEventListener('click', function() {
+    const shareUrl = document.getElementById('shareUrl');
+    shareUrl.select();
+    document.execCommand('copy');
+    this.innerHTML = 'Copied!';
+    setTimeout(() => {
+      this.innerHTML = 'Copy';
+    }, 2000);
+  });
+</script>

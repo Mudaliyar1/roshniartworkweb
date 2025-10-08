@@ -1,0 +1,240 @@
+<form action="<%= artwork && artwork._id ? '/admin/artworks/' + artwork._id + '?_method=PUT' : '/admin/artworks' %>" method="POST" enctype="multipart/form-data">
+  <div class="row">
+    <!-- Main Form -->
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <input type="text" class="form-control" id="title" name="title" value="<%= artwork.title || '' %>" required>
+          </div>
+          
+          <div class="mb-3">
+            <label for="year" class="form-label">Year</label>
+            <input type="number" class="form-control" id="year" name="year" value="<%= artwork.year || new Date().getFullYear() %>" required>
+          </div>
+          
+          <div class="mb-3">
+            <label for="tags" class="form-label">Tags</label>
+            <input type="text" class="form-control" id="tags" name="tags" value="<%= artwork.tags ? artwork.tags.join(', ') : '' %>" placeholder="Enter tags separated by commas">
+            <div class="form-text">Example: drawing, nature, abstract</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea class="form-control" id="description" name="description" rows="6"><%= artwork.description || '' %></textarea>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Images Section -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Images</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label for="images" class="form-label">Upload Images</label>
+            <input class="form-control" type="file" id="images" name="images" multiple accept="image/jpeg,image/png,image/webp">
+            <div class="form-text">You can select multiple images. Supported formats: JPEG, PNG, WebP</div>
+          </div>
+          
+          <% if (artwork.images && artwork.images.length > 0) { %>
+            <div class="mt-4">
+              <label class="form-label">Current Images</label>
+              <div class="row g-3" id="imageContainer">
+                <% artwork.images.forEach((image, index) => { %>
+                  <div class="col-md-4 col-sm-6" data-image-id="<%= image._id %>">
+                    <div class="card h-100 <%= image.isMain ? 'border-primary' : '' %>">
+                      <img src="<%= image.path %>" class="card-img-top" alt="Artwork image" style="height: 150px; object-fit: cover;">
+                      <div class="card-body p-2">
+                        <div class="form-check mb-2">
+                          <input class="form-check-input main-image-radio" type="radio" name="mainImage" id="mainImage<%= index %>" value="<%= image._id %>" <%= image.isMain ? 'checked' : '' %>>
+                          <label class="form-check-label" for="mainImage<%= index %>">
+                            Main Image
+                          </label>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger delete-image" data-image-id="<%= image._id %>">
+                          <i class="bi bi-trash"></i> Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                <% }); %>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      </div>
+      
+      <!-- Video Section -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Video (Optional)</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">Video Type</label>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="videoType" id="videoTypeNone" value="none" <%= !artwork.video || !artwork.video.type ? 'checked' : '' %>>
+              <label class="form-check-label" for="videoTypeNone">
+                No Video
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="videoType" id="videoTypeFile" value="file" <%= artwork.video && artwork.video.type === 'file' ? 'checked' : '' %>>
+              <label class="form-check-label" for="videoTypeFile">
+                Upload Video File
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="videoType" id="videoTypeEmbed" value="embed" <%= artwork.video && artwork.video.type === 'embed' ? 'checked' : '' %>>
+              <label class="form-check-label" for="videoTypeEmbed">
+                Embed Video (YouTube, Vimeo)
+              </label>
+            </div>
+          </div>
+          
+          <div id="videoFileSection" class="mb-3 <%= artwork.video && artwork.video.type === 'file' ? '' : 'd-none' %>">
+            <label for="videoFile" class="form-label">Upload Video</label>
+            <input class="form-control" type="file" id="videoFile" name="videoFile" accept="video/mp4,video/webm">
+            <div class="form-text">Supported formats: MP4, WebM</div>
+            
+            <% if (artwork.video && artwork.video.type === 'file' && artwork.video.path) { %>
+              <div class="mt-2">
+                <p>Current video: <a href="<%= artwork.video.path %>" target="_blank">View</a></p>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="removeVideo" name="removeVideo">
+                  <label class="form-check-label" for="removeVideo">
+                    Remove current video
+                  </label>
+                </div>
+              </div>
+            <% } %>
+          </div>
+          
+          <div id="videoEmbedSection" class="mb-3 <%= artwork.video && artwork.video.type === 'embed' ? '' : 'd-none' %>">
+            <label for="videoEmbed" class="form-label">Embed URL</label>
+            <input type="text" class="form-control" id="videoEmbed" name="videoEmbed" value="<%= artwork.video && artwork.video.embedUrl || '' %>" placeholder="https://www.youtube.com/embed/VIDEO_ID">
+            <div class="form-text">Use the embed URL format (e.g., https://www.youtube.com/embed/VIDEO_ID)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Publish Settings</h5>
+        </div>
+        <div class="card-body">
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="isVisible" name="isVisible" <%= artwork.isVisible !== false ? 'checked' : '' %>>
+            <label class="form-check-label" for="isVisible">
+              Visible on website
+            </label>
+          </div>
+          
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">
+              <%= artwork._id ? 'Update Artwork' : 'Create Artwork' %>
+            </button>
+            <a href="/admin/artworks" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </div>
+      </div>
+      
+      <% if (artwork._id) { %>
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Artwork Info</h5>
+          </div>
+          <div class="card-body">
+            <p class="mb-1"><strong>Created:</strong> <%= new Date(artwork.createdAt).toLocaleDateString() %></p>
+            <p class="mb-1"><strong>Last Updated:</strong> <%= new Date(artwork.updatedAt).toLocaleDateString() %></p>
+            <p class="mb-0"><strong>Slug:</strong> <%= artwork.slug %></p>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</form>
+
+<script>
+  // Toggle video sections based on selected type
+  document.querySelectorAll('input[name="videoType"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      document.getElementById('videoFileSection').classList.add('d-none');
+      document.getElementById('videoEmbedSection').classList.add('d-none');
+      
+      if (this.value === 'file') {
+        document.getElementById('videoFileSection').classList.remove('d-none');
+      } else if (this.value === 'embed') {
+        document.getElementById('videoEmbedSection').classList.remove('d-none');
+      }
+    });
+  });
+  
+  // Image deletion
+  document.querySelectorAll('.delete-image').forEach((button, index) => {
+    button.addEventListener('click', function() {
+      const imageId = this.getAttribute('data-image-id');
+      if (confirm('Are you sure you want to remove this image?')) {
+        // Get the index of this image in the collection
+        const imageIndex = Array.from(document.querySelectorAll('.delete-image')).indexOf(this);
+        fetch(`/api/artworks/<%= artwork._id %>/images/${imageIndex}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            const imageElement = document.querySelector(`[data-image-id="${imageId}"]`);
+            imageElement.remove();
+          } else {
+            alert('Error removing image: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred while removing the image');
+        });
+      }
+    });
+  });
+  
+  // Set main image
+  document.querySelectorAll('.main-image-radio').forEach(radio => {
+    radio.addEventListener('change', function() {
+      if (this.checked) {
+        const imageId = this.value;
+        fetch(`/api/artworks/<%= artwork._id %>/set-main-image`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ imageIndex: Array.from(document.querySelectorAll('.main-image-radio')).indexOf(this) })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            document.querySelectorAll('.card').forEach(card => {
+              card.classList.remove('border-primary');
+            });
+            const imageCard = this.closest('.card');
+            imageCard.classList.add('border-primary');
+          } else {
+            alert('Error setting main image: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred while setting the main image');
+        });
+      }
+    });
+  });
+</script>
