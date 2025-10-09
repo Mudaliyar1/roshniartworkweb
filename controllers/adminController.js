@@ -1,3 +1,165 @@
+// --- ABOUT PAGE MANAGEMENT ---
+const About = require('../models/About');
+
+// Show About edit form
+exports.getEditAbout = async (req, res) => {
+  let about = await About.findOne();
+  if (!about) about = new About();
+  res.render('admin/about-form', {
+    title: 'Edit About Page',
+    layout: 'layouts/admin',
+    about
+  });
+};
+
+// Update About info (with image upload)
+exports.updateAbout = async (req, res) => {
+  try {
+    let about = await About.findOne();
+    if (!about) about = new About();
+    about.bio = req.body.bio || '';
+    about.journey = req.body.journey || '';
+    about.philosophy = req.body.philosophy || '';
+    about.inspiration = req.body.inspiration || '';
+    about.mission = req.body.mission || '';
+    about.social = {
+      instagram: req.body.instagram || '',
+      facebook: req.body.facebook || '',
+      twitter: req.body.twitter || '',
+      youtube: req.body.youtube || ''
+    };
+    // Debug: log file info
+    console.log('About update: req.file =', req.file);
+    // Handle profile image upload
+    if (req.file && req.file.fieldname === 'profileImage') {
+      about.profileImage = '/uploads/images/' + req.file.filename;
+      console.log('About update: profileImage set to', about.profileImage);
+    } else {
+      console.log('About update: No new profile image uploaded.');
+    }
+    about.updatedAt = Date.now();
+    await about.save();
+    console.log('About update: Saved about document:', about);
+    req.flash('success_msg', 'About page updated successfully');
+    res.redirect('/admin/about');
+  } catch (error) {
+    console.error('Update about error:', error);
+    req.flash('error_msg', 'An error occurred while updating About page');
+    res.redirect('/admin/about');
+  }
+};
+// --- ADMIN PROFILE MANAGEMENT ---
+const User = require('../models/User');
+
+// List all admins
+exports.getAdmins = async (req, res) => {
+  try {
+    const admins = await User.find({ isAdmin: true });
+    res.render('admin/admins-list', {
+      title: 'Admin Management',
+      layout: 'layouts/admin',
+      admins
+    });
+  } catch (error) {
+    console.error('Get admins error:', error);
+    req.flash('error_msg', 'An error occurred while loading admins');
+    res.redirect('/admin');
+  }
+};
+
+// Show add admin form
+exports.getAddAdmin = (req, res) => {
+  res.render('admin/admin-form', {
+    title: 'Add Admin',
+    layout: 'layouts/admin',
+    admin: {},
+    editMode: false
+  });
+};
+
+// Create new admin
+exports.createAdmin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      req.flash('error_msg', 'Please fill in all fields');
+      return res.redirect('/admin/admins/new');
+    }
+    const existing = await User.findOne({ email });
+    if (existing) {
+      req.flash('error_msg', 'Email already exists');
+      return res.redirect('/admin/admins/new');
+    }
+    const newAdmin = new User({ email, password, isAdmin: true });
+    await newAdmin.save();
+    req.flash('success_msg', 'Admin created successfully');
+    res.redirect('/admin/admins');
+  } catch (error) {
+    console.error('Create admin error:', error);
+    req.flash('error_msg', 'An error occurred while creating admin');
+    res.redirect('/admin/admins/new');
+  }
+};
+
+// Show edit admin form
+exports.getEditAdmin = async (req, res) => {
+  try {
+    const admin = await User.findById(req.params.id);
+    if (!admin || !admin.isAdmin) {
+      req.flash('error_msg', 'Admin not found');
+      return res.redirect('/admin/admins');
+    }
+    res.render('admin/admin-form', {
+      title: 'Edit Admin',
+      layout: 'layouts/admin',
+      admin,
+      editMode: true
+    });
+  } catch (error) {
+    console.error('Get edit admin error:', error);
+    req.flash('error_msg', 'An error occurred while loading admin');
+    res.redirect('/admin/admins');
+  }
+};
+
+// Update admin
+exports.updateAdmin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const admin = await User.findById(req.params.id);
+    if (!admin || !admin.isAdmin) {
+      req.flash('error_msg', 'Admin not found');
+      return res.redirect('/admin/admins');
+    }
+    admin.email = email;
+    if (password) admin.password = password;
+    await admin.save();
+    req.flash('success_msg', 'Admin updated successfully');
+    res.redirect('/admin/admins');
+  } catch (error) {
+    console.error('Update admin error:', error);
+    req.flash('error_msg', 'An error occurred while updating admin');
+    res.redirect('/admin/admins');
+  }
+};
+
+// Delete admin
+exports.deleteAdmin = async (req, res) => {
+  try {
+    const admin = await User.findById(req.params.id);
+    if (!admin || !admin.isAdmin) {
+      req.flash('error_msg', 'Admin not found');
+      return res.redirect('/admin/admins');
+    }
+    await admin.deleteOne();
+    req.flash('success_msg', 'Admin deleted successfully');
+    res.redirect('/admin/admins');
+  } catch (error) {
+    console.error('Delete admin error:', error);
+    req.flash('error_msg', 'An error occurred while deleting admin');
+    res.redirect('/admin/admins');
+  }
+};
 const Artwork = require('../models/Artwork');
 const Message = require('../models/Message');
 const SiteStyling = require('../models/SiteStyling');
@@ -10,36 +172,108 @@ const { createObjectCsvWriter } = require('csv-writer');
 // Dashboard
 exports.getDashboard = async (req, res) => {
   try {
-    // Get stats for dashboard
-    const totalArtworks = await Artwork.countDocuments();
-    const draftArtworks = await Artwork.countDocuments({ visibility: 'draft' });
-    const unreadMessages = await Message.countDocuments({ isRead: false });
+    console.log('Loading dashboard stats...');
     
-    // Get recent artworks
-    const recentArtworks = await Artwork.find()
-      .sort({ createdAt: -1 })
-      .limit(5);
+    // Get stats for dashboard with error handling for each query
+    let artworkCount = 0;
+    let totalMessages = 0;
+    let unreadMessageCount = 0;
+    let mediaCount = 0;
+    let recentArtworks = [];
+    let recentMessages = [];
     
-    // Get recent messages
-    const recentMessages = await Message.find()
-      .sort({ createdAt: -1 })
-      .limit(5);
+    try {
+      artworkCount = await Artwork.countDocuments();
+      console.log('Artwork count:', artworkCount);
+    } catch (err) {
+      console.error('Error counting artworks:', err);
+      artworkCount = 0;
+    }
     
+    try {
+      totalMessages = await Message.countDocuments();
+      unreadMessageCount = await Message.countDocuments({ isRead: false });
+      console.log('Message count:', totalMessages, 'Unread:', unreadMessageCount);
+    } catch (err) {
+      console.error('Error counting messages:', err);
+      totalMessages = 0;
+      unreadMessageCount = 0;
+    }
+    
+    try {
+      // Count media files (images and videos)
+      const artworks = await Artwork.find().select('images video');
+      artworks.forEach(artwork => {
+        if (artwork.images && Array.isArray(artwork.images)) {
+          mediaCount += artwork.images.length;
+        }
+        if (artwork.video && (artwork.video.type === 'file' || artwork.video.type === 'upload')) {
+          mediaCount += 1;
+        }
+      });
+      console.log('Media count:', mediaCount);
+    } catch (err) {
+      console.error('Error counting media:', err);
+      mediaCount = 0;
+    }
+    
+    try {
+      // Get recent artworks
+      recentArtworks = await Artwork.find()
+        .select('title createdAt isVisible images')
+        .sort({ createdAt: -1 })
+        .limit(5);
+      console.log('Recent artworks:', recentArtworks.length);
+    } catch (err) {
+      console.error('Error fetching recent artworks:', err);
+      recentArtworks = [];
+    }
+    
+    try {
+      // Get recent messages
+      recentMessages = await Message.find()
+        .select('name email subject message isRead createdAt')
+        .sort({ createdAt: -1 })
+        .limit(5);
+      console.log('Recent messages:', recentMessages.length);
+    } catch (err) {
+      console.error('Error fetching recent messages:', err);
+      recentMessages = [];
+    }
+    
+    const dashboardData = {
+      title: 'Admin Dashboard',
+      layout: 'layouts/admin',
+      stats: {
+        artworkCount: Number(artworkCount) || 0,
+        messageCount: Number(totalMessages) || 0,
+        unreadMessageCount: Number(unreadMessageCount) || 0,
+        mediaCount: Number(mediaCount) || 0
+      },
+      recentArtworks: recentArtworks || [],
+      recentMessages: recentMessages || []
+    };
+    
+    console.log('Dashboard stats:', dashboardData.stats);
+    res.render('admin/dashboard', dashboardData);
+    
+  } catch (error) {
+    console.error('Dashboard error:', error);
+    req.flash('error_msg', 'An error occurred while loading the dashboard');
+    
+    // Still render the dashboard with default values
     res.render('admin/dashboard', {
       title: 'Admin Dashboard',
       layout: 'layouts/admin',
       stats: {
-        totalArtworks,
-        draftArtworks,
-        unreadMessages
+        artworkCount: 0,
+        messageCount: 0,
+        unreadMessageCount: 0,
+        mediaCount: 0
       },
-      recentArtworks,
-      recentMessages
+      recentArtworks: [],
+      recentMessages: []
     });
-  } catch (error) {
-    console.error('Dashboard error:', error);
-    req.flash('error_msg', 'An error occurred while loading the dashboard');
-    res.redirect('/admin');
   }
 };
 
@@ -150,25 +384,21 @@ exports.createArtwork = async (req, res) => {
       images: []
     });
     
-    // Process uploaded images
-    if (req.files && req.files.length > 0) {
+    // Process uploaded images (support multer.fields)
+    if (req.files && req.files.images && req.files.images.length > 0) {
       // Create thumbnails directory if it doesn't exist
       const thumbnailDir = './public/uploads/thumbnails';
       fs.mkdirSync(thumbnailDir, { recursive: true });
-      
       // Process each image
-      for (let i = 0; i < req.files.length; i++) {
-        const file = req.files[i];
+      for (let i = 0; i < req.files.images.length; i++) {
+        const file = req.files.images[i];
         const isMain = i === 0; // First image is main by default
-        
         // Generate thumbnail
         const thumbnailFilename = `thumb-${path.basename(file.filename)}`;
         const thumbnailPath = path.join(thumbnailDir, thumbnailFilename);
-        
         await sharp(file.path)
           .resize(300, 300, { fit: 'inside' })
           .toFile(path.join('public', 'uploads', 'thumbnails', thumbnailFilename));
-        
         // Add image to artwork
         newArtwork.images.push({
           path: `/uploads/images/${file.filename}`,
@@ -224,6 +454,11 @@ exports.updateArtwork = async (req, res) => {
       return res.redirect('/admin/artworks');
     }
     
+    // Validate description
+    if (!description || description.trim() === '') {
+      req.flash('error_msg', 'Description is required.');
+      return res.redirect(`/admin/artworks/${req.params.id}`);
+    }
     // Update fields
     artwork.title = title;
     artwork.description = sanitizeHtml(description);
@@ -360,11 +595,45 @@ exports.deleteArtwork = async (req, res) => {
 exports.getMessages = async (req, res) => {
   try {
     const messages = await Message.find().sort({ createdAt: -1 });
+    console.log('Retrieved messages from database:', messages.length, 'messages found');
+    
+    // Process messages to ensure proper ID serialization
+    const processedMessages = messages.map(message => {
+      const messageObj = message.toObject(); // Convert to plain object
+      messageObj._id = message._id.toString(); // Ensure _id is a string
+      console.log('Processed message:', {
+        id: messageObj._id,
+        name: messageObj.name,
+        idType: typeof messageObj._id
+      });
+      return messageObj;
+    }).filter(message => {
+      // Filter out any messages with invalid IDs
+      if (!message._id || message._id === 'undefined' || message._id === 'null') {
+        console.warn('Found message with invalid ID:', message);
+        return false;
+      }
+      return true;
+    });
+    
+    if (processedMessages.length > 0) {
+      console.log('Sample processed message:', {
+        id: processedMessages[0]._id,
+        name: processedMessages[0].name,
+        email: processedMessages[0].email,
+        createdAt: processedMessages[0].createdAt,
+        idType: typeof processedMessages[0]._id
+      });
+    }
+    
+    if (processedMessages.length !== messages.length) {
+      console.warn(`Filtered out ${messages.length - processedMessages.length} messages with invalid IDs`);
+    }
     
     res.render('admin/messages/index', {
       title: 'Messages',
       layout: 'layouts/admin',
-      messages
+      messages: processedMessages
     });
   } catch (error) {
     console.error('Get messages error:', error);
@@ -397,6 +666,39 @@ exports.getMessage = async (req, res) => {
   } catch (error) {
     console.error('Get message error:', error);
     req.flash('error_msg', 'An error occurred while loading the message');
+    res.redirect('/admin/messages');
+  }
+};
+
+// Get delete message confirmation page
+exports.getDeleteMessage = async (req, res) => {
+  try {
+    console.log('Getting delete confirmation page for message ID:', req.params.id);
+    
+    // Validate the message ID format
+    if (!req.params.id || !req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      console.error('Invalid message ID format:', req.params.id);
+      req.flash('error_msg', 'Invalid message ID');
+      return res.redirect('/admin/messages');
+    }
+    
+    const message = await Message.findById(req.params.id);
+    
+    if (!message) {
+      console.error('Message not found with ID:', req.params.id);
+      req.flash('error_msg', 'Message not found');
+      return res.redirect('/admin/messages');
+    }
+    
+    console.log('Rendering delete confirmation page for message:', message.name);
+    res.render('admin/messages/delete', {
+      title: `Delete Message from ${message.name}`,
+      layout: 'layouts/admin',
+      message: message
+    });
+  } catch (error) {
+    console.error('Get delete message error:', error);
+    req.flash('error_msg', 'An error occurred while loading the delete confirmation page');
     res.redirect('/admin/messages');
   }
 };
@@ -437,6 +739,72 @@ exports.deleteMessage = async (req, res) => {
   } catch (error) {
     console.error('Delete message error:', error);
     req.flash('error_msg', 'An error occurred while deleting the message');
+    res.redirect('/admin/messages');
+  }
+};
+
+// Toggle message read status (form submission)
+exports.toggleMessageRead = async (req, res) => {
+  try {
+    const message = await Message.findById(req.params.id);
+    
+    if (!message) {
+      req.flash('error_msg', 'Message not found');
+      return res.redirect('/admin/messages');
+    }
+    
+    message.isRead = !message.isRead; // Toggle read status
+    await message.save();
+    
+    const statusText = message.isRead ? 'read' : 'unread';
+    req.flash('success_msg', `Message marked as ${statusText}`);
+    res.redirect(`/admin/messages/${message._id}`);
+  } catch (error) {
+    console.error('Toggle message read error:', error);
+    req.flash('error_msg', 'An error occurred while updating the message');
+    res.redirect('/admin/messages');
+  }
+};
+
+// Delete message (form submission)
+exports.deleteMessageForm = async (req, res) => {
+  try {
+    console.log('DeleteMessageForm called with id:', req.params.id);
+    console.log('Full request params:', req.params);
+    console.log('Request URL:', req.url);
+    console.log('Request method:', req.method);
+    
+    // Validate the message ID
+    if (!req.params.id || req.params.id === 'undefined' || req.params.id === 'null') {
+      console.error('Invalid message ID received:', req.params.id);
+      req.flash('error_msg', 'Invalid message ID. Please try again.');
+      return res.redirect('/admin/messages');
+    }
+
+    // Check if the ID is a valid MongoDB ObjectId
+    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      console.error('Invalid MongoDB ObjectId format:', req.params.id);
+      req.flash('error_msg', 'Invalid message ID format. Please try again.');
+      return res.redirect('/admin/messages');
+    }
+    
+    const message = await Message.findById(req.params.id);
+    if (!message) {
+      console.error('Message not found with ID:', req.params.id);
+      req.flash('error_msg', 'Message not found. It may have already been deleted.');
+      return res.redirect('/admin/messages');
+    }
+    
+    console.log('Found message to delete:', { id: message._id, name: message.name, email: message.email });
+    await message.deleteOne();
+    console.log('Message deleted successfully');
+    
+    req.flash('success_msg', 'Message deleted successfully');
+    res.redirect('/admin/messages');
+  } catch (error) {
+    console.error('Delete message form error:', error);
+    console.error('Error stack:', error.stack);
+    req.flash('error_msg', 'An error occurred while deleting the message. Please try again or contact support.');
     res.redirect('/admin/messages');
   }
 };
@@ -503,85 +871,6 @@ exports.exportMessages = async (req, res) => {
   }
 };
 
-// Get styling page
-exports.getStyling = async (req, res) => {
-  try {
-    const siteStyles = await SiteStyling.findOne();
-    
-    res.render('admin/styling', {
-      title: 'Site Styling',
-      layout: 'layouts/admin',
-      siteStyles
-    });
-  } catch (error) {
-    console.error('Get styling error:', error);
-    req.flash('error_msg', 'An error occurred while loading styling options');
-    res.redirect('/admin');
-  }
-};
-
-// Update styling
-exports.updateStyling = async (req, res) => {
-  try {
-    const {
-      primaryColor,
-      secondaryColor,
-      backgroundColor,
-      fontFamily,
-      baseFontSize,
-      headingScale,
-      buttonRadius,
-      headerTextColor,
-      footerTextColor
-    } = req.body;
-    
-    // Find or create site styling
-    let siteStyles = await SiteStyling.findOne();
-    
-    if (!siteStyles) {
-      siteStyles = new SiteStyling();
-    }
-    
-    // Update fields
-    siteStyles.primaryColor = primaryColor;
-    siteStyles.secondaryColor = secondaryColor;
-    siteStyles.backgroundColor = backgroundColor;
-    siteStyles.fontFamily = fontFamily;
-    siteStyles.baseFontSize = baseFontSize;
-    siteStyles.headingScale = headingScale;
-    siteStyles.buttonRadius = buttonRadius;
-    siteStyles.headerTextColor = headerTextColor;
-    siteStyles.footerTextColor = footerTextColor;
-    siteStyles.updatedAt = Date.now();
-    
-    // Process logo if uploaded
-    if (req.file) {
-      // Delete old logo if it exists and is not the default
-      if (siteStyles.logoPath && siteStyles.logoPath !== '/images/default-logo.svg') {
-        try {
-          const oldLogoPath = path.join('public', siteStyles.logoPath);
-          if (fs.existsSync(oldLogoPath)) {
-            fs.unlinkSync(oldLogoPath);
-          }
-        } catch (err) {
-          console.error('Error deleting old logo:', err);
-        }
-      }
-      
-      // Set new logo path
-      siteStyles.logoPath = `/uploads/images/${req.file.filename}`;
-    }
-    
-    await siteStyles.save();
-    
-    req.flash('success_msg', 'Site styling updated successfully');
-    res.redirect('/admin/styling');
-  } catch (error) {
-    console.error('Update styling error:', error);
-    req.flash('error_msg', 'An error occurred while updating styling');
-    res.redirect('/admin/styling');
-  }
-};
 
 // Reset styling to defaults
 exports.resetStyling = async (req, res) => {

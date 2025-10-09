@@ -1,32 +1,60 @@
-<div class="position-sticky pt-3">
-  <div class="d-flex align-items-center justify-content-center mb-4">
-    <img src="<%= siteStyles.logoPath || '/images/default-logo.svg' %>" alt="Artist Logo" height="40">
-  </div>
+<div class="sidebar-header">
+  <img src="/images/logo-mobile.svg" alt="Roshni's Art" class="sidebar-logo" height="40">
+  <h4>Admin Panel</h4>
+  <p>Dashboard</p>
+</div>
+
+<div class="sidebar-nav">
   <ul class="nav flex-column">
     <li class="nav-item">
       <a class="nav-link <%= title === 'Admin Dashboard' ? 'active' : '' %>" href="/admin">
-        <i class="bi bi-speedometer2 me-2"></i> Dashboard
+        <i class="bi bi-house-heart-fill"></i> Dashboard
       </a>
     </li>
+    
+    <div class="nav-section-title">Content Management</div>
     <li class="nav-item">
       <a class="nav-link <%= title.includes('Artwork') ? 'active' : '' %>" href="/admin/artworks">
-        <i class="bi bi-image me-2"></i> Artworks
+        <i class="bi bi-palette-fill"></i> Artworks
       </a>
     </li>
     <li class="nav-item">
       <a class="nav-link <%= title.includes('Message') ? 'active' : '' %>" href="/admin/messages">
-        <i class="bi bi-envelope me-2"></i> Messages
+        <i class="bi bi-chat-heart-fill"></i> Messages
+      </a>
+    </li>
+
+    <li class="nav-item">
+  <a class="nav-link <%= (title === 'Admin Management' || title === 'Edit Admins') ? 'active' : '' %>" href="/admin/admins">
+        <i class="bi bi-person-gear"></i> Admin Management
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a class="nav-link <%= title.includes('About') ? 'active' : '' %>" href="/admin/about">
+        <i class="bi bi-person-lines-fill"></i> About Page
+      </a>
+    </li>
+    
+    
+    <div class="nav-section-title">Quick Actions</div>
+    <li class="nav-item">
+      <a class="nav-link" href="/admin/artworks/new">
+        <i class="bi bi-plus-circle-fill"></i> Add New Artwork
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link <%= title === 'Site Styling' ? 'active' : '' %>" href="/admin/styling">
-        <i class="bi bi-palette me-2"></i> Site Styling
+      <a class="nav-link" href="/" target="_blank">
+        <i class="bi bi-eye-fill"></i> View Website
       </a>
     </li>
-    <li class="nav-item mt-4">
-      <a class="nav-link text-danger" href="/logout">
-        <i class="bi bi-box-arrow-right me-2"></i> Logout
-      </a>
-    </li>
+    
+    <div class="nav-section">
+      <li class="nav-item">
+        <a class="nav-link logout" href="/logout">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </a>
+      </li>
+    </div>
   </ul>
 </div>

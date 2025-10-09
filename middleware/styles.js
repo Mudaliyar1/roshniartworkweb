@@ -17,7 +17,12 @@ exports.injectSiteStyles = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Error loading site styles:', error);
-    // Continue even if styles fail to load
+    // Continue even if styles fail to load with default values
+    res.locals.siteStyles = {
+      logoPath: '/images/default-logo.svg',
+      primaryColor: '#d946ef',
+      secondaryColor: '#c084fc'
+    };
     res.locals.cssVariables = '';
     next();
   }

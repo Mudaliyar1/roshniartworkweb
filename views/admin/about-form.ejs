@@ -1,0 +1,49 @@
+<div class="container mt-4">
+  <h2>Edit About Page</h2>
+  <form action="/admin/about" method="POST" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label class="form-label">Profile Image</label><br>
+      <% if (about.profileImage) { %>
+        <img src="<%= about.profileImage %>" alt="Profile Image" class="mb-2 rounded" style="max-width:120px;max-height:120px;display:block;">
+      <% } %>
+      <input type="file" class="form-control" name="profileImage" accept="image/*">
+      <small class="text-muted">Upload a new image to replace the current one.</small>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Short Bio</label>
+      <textarea class="form-control" name="bio" rows="2"><%= about.bio %></textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">My Artistic Journey</label>
+      <textarea class="form-control" name="journey" rows="2"><%= about.journey %></textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">My Philosophy</label>
+      <textarea class="form-control" name="philosophy" rows="2"><%= about.philosophy %></textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">What Inspires Me</label>
+      <textarea class="form-control" name="inspiration" rows="2"><%= about.inspiration %></textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">My Mission</label>
+      <textarea class="form-control" name="mission" rows="2"><%= about.mission %></textarea>
+    </div>
+    <h5>Social Links</h5>
+    <div class="row mb-3">
+      <div class="col">
+        <input type="text" class="form-control" name="instagram" placeholder="Instagram URL" value="<%= about.social.instagram %>">
+      </div>
+      <div class="col">
+        <input type="text" class="form-control" name="facebook" placeholder="Facebook URL" value="<%= about.social.facebook %>">
+      </div>
+      <div class="col">
+        <input type="text" class="form-control" name="twitter" placeholder="Twitter URL" value="<%= about.social.twitter %>">
+      </div>
+      <div class="col">
+        <input type="text" class="form-control" name="youtube" placeholder="YouTube URL" value="<%= about.social.youtube %>">
+      </div>
+    </div>
+    <button type="submit" class="btn btn-admin-primary">Save Changes</button>
+  </form>
+</div>

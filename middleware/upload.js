@@ -42,8 +42,12 @@ const fileFilter = (req, file, cb) => {
     } else {
       cb(new Error('Logo must be an image file (JPG, PNG, WebP, or SVG)'), false);
     }
-  } else if (file.fieldname === 'images' || file.fieldname === 'artworkImages') {
-    // Images
+  } else if (
+    file.fieldname === 'images' ||
+    file.fieldname === 'artworkImages' ||
+    file.fieldname === 'profileImage'
+  ) {
+    // Images (including About profile image)
     if (allowedImageTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {

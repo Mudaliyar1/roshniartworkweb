@@ -1,15 +1,17 @@
 <div class="container py-5">
   <!-- Gallery Header -->
-  <div class="row mb-4">
-    <div class="col-md-8">
-      <h1>Gallery</h1>
-      <p class="lead">Explore my collection of artwork</p>
-    </div>
-    <div class="col-md-4">
-      <form action="/gallery" method="GET" class="d-flex">
-        <input type="text" name="search" class="form-control me-2" placeholder="Search artworks..." value="<%= search || '' %>">
-        <button type="submit" class="btn btn-outline-primary">Search</button>
-      </form>
+  <div class="hero-section text-center mb-5">
+    <h1 class="display-4 mb-3">🎨 Art Gallery</h1>
+    <p class="lead mb-4">Step into my colorful world where every piece tells a story of beauty, dreams, and feminine grace</p>
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <form action="/gallery" method="GET" class="d-flex">
+          <input type="text" name="search" class="form-control me-2" placeholder="🔍 Search for magical artworks..." value="<%= search || '' %>">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-search"></i>
+          </button>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -61,22 +63,25 @@
     <% if (artworks && artworks.length > 0) { %>
       <% artworks.forEach(artwork => { %>
         <div class="col-md-6 col-lg-4">
-          <div class="card h-100 shadow-sm">
+          <div class="card h-100 shadow-sm" style="max-width:320px; margin:0 auto;">
             <% const mainImage = artwork.images.find(img => img.isMain) || artwork.images[0]; %>
             <% if (mainImage) { %>
-              <div style="height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                <img src="<%= mainImage.thumbnailPath || mainImage.path %>" class="img-fluid" alt="<%= artwork.title %>" style="max-height: 100%; width: auto; object-fit: contain;">
-              </div>
+                <div style="height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-top-left-radius: .5rem; border-top-right-radius: .5rem; background: #fff;">
+                  <img src="<%= mainImage.thumbnailPath || mainImage.path %>" class="img-fluid" alt="<%= artwork.title %>" style="max-height: 90%; width: auto; object-fit: contain; margin: auto;">
+                </div>
             <% } else { %>
               <div class="bg-secondary" style="height: 250px;"></div>
             <% } %>
             <div class="card-body">
               <h5 class="card-title"><%= artwork.title %></h5>
               <p class="card-text text-muted"><%= artwork.year %></p>
-              <div class="d-flex flex-wrap mb-2">
-                <% artwork.tags.forEach(tag => { %>
-                  <span class="badge bg-light text-dark me-1 mb-1"><%= tag %></span>
-                <% }); %>
+              <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+                <div>
+                  <% artwork.tags.forEach(tag => { %>
+                    <span class="badge bg-light text-dark me-1 mb-1"><%= tag %></span>
+                  <% }); %>
+                </div>
+                <a href="/gallery/<%= artwork.slug %>" class="btn btn-outline-primary">View Details</a>
               </div>
               <p class="card-text"><%= artwork.description.substring(0, 100) %>...</p>
               <% if (artwork.video && (artwork.video.type === 'file' || artwork.video.type === 'embed')) { %>
@@ -84,7 +89,6 @@
                   <span class="badge bg-danger text-white"><i class="bi bi-camera-video"></i> Video Available</span>
                 </div>
               <% } %>
-              <a href="/gallery/<%= artwork.slug %>" class="btn btn-outline-primary">View Details</a>
             </div>
           </div>
         </div>

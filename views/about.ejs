@@ -1,33 +1,110 @@
-<div class="container py-5">
-  <div class="row">
-    <div class="col-lg-4 mb-4 mb-lg-0">
-      <img src="<%= (typeof about !== 'undefined' && about.profileImage) ? about.profileImage : '/uploads/images/profile-placeholder.jpg' %>" alt="Artist Profile" class="img-fluid rounded shadow-sm">
+<div class="container-fluid">
+  <!-- Hero Section -->
+  <div class="hero-section text-center mb-5">
+    <h1 class="display-4 mb-3">💫 About Roshni</h1>
+    <p class="lead">The artist behind the magic, colors, and dreams</p>
+  </div>
+
+  <div class="container">
+    <div class="row align-items-center mb-5">
+      <div class="col-lg-5 mb-4 mb-lg-0">
+    <div class="about-image-container position-relative">
+  <img src="<%= about && about.profileImage ? about.profileImage : '/uploads/images/profile-placeholder.svg' %>" alt="Roshni - Artist" class="img-fluid rounded-4 shadow-lg">
+          <div class="image-decoration">
+            <div class="decoration-circle"></div>
+            <div class="decoration-heart">💕</div>
+            <div class="decoration-star">⭐</div>
+          </div>
+        </div>
+        
+      </div>
       
-      <div class="mt-4">
-        <h4>Connect With Me</h4>
-        <div class="d-flex gap-3 mt-3">
-          <a href="<%= (typeof about !== 'undefined' && about.instagram) ? about.instagram : '#' %>" class="text-decoration-none fs-4" target="_blank"><i class="bi bi-instagram"></i></a>
-          <a href="<%= (typeof about !== 'undefined' && about.youtube) ? about.youtube : '#' %>" class="text-decoration-none fs-4" target="_blank"><i class="bi bi-youtube"></i></a>
-          <a href="<%= (typeof about !== 'undefined' && about.facebook) ? about.facebook : '#' %>" class="text-decoration-none fs-4" target="_blank"><i class="bi bi-facebook"></i></a>
-          <a href="<%= (typeof about !== 'undefined' && about.twitter) ? about.twitter : '#' %>" class="text-decoration-none fs-4" target="_blank"><i class="bi bi-twitter"></i></a>
+      <div class="col-lg-7">
+        <div class="about-content">
+          <% if (about) { %>
+            <% if (about.bio) { %>
+              <h2 class="mb-4"><%= about.bio %></h2>
+            <% } %>
+            <% if (about.journey) { %>
+              <div class="story-section mb-4">
+                <h3 class="h4 mb-3"><i class="bi bi-palette me-2"></i>My Artistic Journey</h3>
+                <p><%= about.journey %></p>
+              </div>
+            <% } %>
+            <% if (about.philosophy) { %>
+              <div class="philosophy-section mb-4">
+                <h3 class="h4 mb-3"><i class="bi bi-heart me-2"></i>My Philosophy</h3>
+                <p><%= about.philosophy %></p>
+              </div>
+            <% } %>
+            <% if (about.inspiration) { %>
+              <div class="inspiration-section mb-4">
+                <h3 class="h4 mb-3"><i class="bi bi-stars me-2"></i>What Inspires Me</h3>
+                <p><%= about.inspiration %></p>
+              </div>
+            <% } %>
+            <% if (about.mission) { %>
+              <div class="mission-section">
+                <h3 class="h4 mb-3"><i class="bi bi-gem me-2"></i>My Mission</h3>
+                <p><%= about.mission %></p>
+              </div>
+            <% } %>
+          <% } else { %>
+            <h2 class="mb-4">Hello Beautiful Souls! 🌸</h2>
+            <p class="lead mb-4">I'm Roshni, and I believe that art is the most beautiful language to express the magic within our hearts.</p>
+            <div class="story-section mb-4">
+              <h3 class="h4 mb-3"><i class="bi bi-palette me-2"></i>My Artistic Journey</h3>
+              <p>My love affair with colors began as a little girl, when I would spend hours lost in a world of crayons and dreams. What started as innocent doodles has blossomed into a passionate journey of creating art that celebrates femininity, nature's wonders, and the delicate emotions that make us uniquely beautiful.</p>
+            </div>
+            <div class="philosophy-section mb-4">
+              <h3 class="h4 mb-3"><i class="bi bi-heart me-2"></i>My Philosophy</h3>
+              <p>I believe that every woman carries an inner goddess - radiant, powerful, and beautifully unique. Through my art, I aim to capture that divine feminine energy, creating pieces that not only please the eye but also speak to the soul. Each brushstroke is infused with love, each color chosen to evoke joy and wonder.</p>
+            </div>
+            <div class="inspiration-section mb-4">
+              <h3 class="h4 mb-3"><i class="bi bi-stars me-2"></i>What Inspires Me</h3>
+              <p>I draw inspiration from the gentle morning light filtering through pink curtains, the way flowers dance in the breeze, the sparkle in a woman's eyes when she feels truly beautiful, and the magical moments when dreams feel within reach. Nature, emotions, and the celebration of womanhood are the threads that weave through all my creations.</p>
+            </div>
+            <div class="mission-section">
+              <h3 class="h4 mb-3"><i class="bi bi-gem me-2"></i>My Mission</h3>
+              <p>Through my art, I want to create a world where every woman feels seen, celebrated, and inspired to embrace her own unique beauty. Whether it's through a gentle watercolor that brings peace to your day or a vibrant piece that ignites your inner fire, I hope my creations add a touch of magic to your life.</p>
+            </div>
+          <% } %>
         </div>
       </div>
     </div>
-    
-    <div class="col-lg-8">
-      <h1 class="mb-4">About Me</h1>
-      
-      <div class="about-content">
-        <% if (about && about.content) { %>
-          <%- about.content %>
-        <% } else { %>
-          <p class="lead">Hello, I'm an artist passionate about creating meaningful artwork.</p>
-          <p>I specialize in drawings and mixed media art that explores themes of nature, human emotions, and the intersection of reality and imagination.</p>
-          <p>My artistic journey began when I was a child, fascinated by colors and shapes. Over the years, I've developed my skills through formal education and continuous practice, always seeking to push the boundaries of my creativity.</p>
-          <p>Each piece I create tells a story, capturing moments of beauty, introspection, or social commentary. I believe art has the power to connect people across different backgrounds and experiences, creating a universal language that speaks to our shared humanity.</p>
-          <p>When I'm not in my studio, I enjoy teaching art to young students, hiking in nature to find inspiration, and collaborating with other artists on community projects.</p>
-          <p>Thank you for visiting my portfolio. I hope my work resonates with you and perhaps even inspires your own creative journey.</p>
-        <% } %>
+
+    <!-- Skills & Techniques Section -->
+    <div class="skills-section p-5 rounded-4 mb-5" style="background: linear-gradient(135deg, rgba(217, 70, 239, 0.05) 0%, rgba(248, 187, 217, 0.1) 100%);">
+      <h3 class="text-center mb-4">🎨 My Creative Toolkit</h3>
+      <div class="row g-4">
+        <div class="col-md-3 col-sm-6">
+          <div class="skill-item text-center">
+            <i class="bi bi-brush-fill mb-2" style="font-size: 2rem; color: var(--primary-color);"></i>
+            <h5>Watercolors</h5>
+            <p class="small">Delicate & dreamy</p>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="skill-item text-center">
+            <i class="bi bi-pencil-fill mb-2" style="font-size: 2rem; color: var(--secondary-color);"></i>
+            <h5>Pencil Art</h5>
+            <p class="small">Detailed & expressive</p>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="skill-item text-center">
+            <i class="bi bi-laptop mb-2" style="font-size: 2rem; color: var(--pink-dark);"></i>
+            <h5>Digital Art</h5>
+            <p class="small">Modern & vibrant</p>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="skill-item text-center">
+            <i class="bi bi-magic mb-2" style="font-size: 2rem; color: var(--accent-color);"></i>
+            <h5>Mixed Media</h5>
+            <p class="small">Creative & unique</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>

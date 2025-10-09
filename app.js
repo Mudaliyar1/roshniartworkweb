@@ -56,6 +56,7 @@ app.set('views', path.join(__dirname, 'views'));
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/svg', express.static(path.join(__dirname, 'public/svg')));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Session configuration
 app.use(session({

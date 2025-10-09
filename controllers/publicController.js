@@ -1,6 +1,7 @@
 const Artwork = require('../models/Artwork');
 const Message = require('../models/Message');
 const sanitizeHtml = require('sanitize-html');
+const About = require('../models/About');
 
 // Home page
 exports.getHomePage = async (req, res) => {
@@ -24,17 +25,12 @@ exports.getHomePage = async (req, res) => {
 };
 
 // About page
-exports.getAboutPage = (req, res) => {
+exports.getAboutPage = async (req, res) => {
+  let about = await About.findOne();
   res.render('about', {
-    title: 'About',
-    about: {
-      profileImage: '/uploads/images/profile-placeholder.jpg',
-      instagram: '',
-      youtube: '',
-      facebook: '',
-      twitter: '',
-      content: null
-    }
+    title: 'About Roshni',
+    layout: 'layouts/main',
+    about
   });
 };
 
@@ -148,13 +144,18 @@ exports.getContactPage = (req, res) => {
 // Submit contact form
 exports.submitContactForm = async (req, res) => {
   try {
+    console.log('Contact form submission received:', req.body);
+    
     const { name, email, subject, message } = req.body;
     
     // Validate input
     if (!name || !email || !message) {
+      console.log('Validation failed: missing required fields');
       req.flash('error_msg', 'Please fill in all required fields');
       return res.redirect('/contact');
     }
+    
+    console.log('Validation passed, creating message...');
     
     // Sanitize input
     const sanitizedMessage = sanitizeHtml(message, {
@@ -169,19 +170,36 @@ exports.submitContactForm = async (req, res) => {
     
     // Create new message
     const newMessage = new Message({
-      name,
-      email,
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
       subject: sanitizedSubject,
       message: sanitizedMessage
     });
     
-    await newMessage.save();
+    console.log('About to save message:', {
+      name: newMessage.name,
+      email: newMessage.email,
+      subject: newMessage.subject,
+      messageLength: newMessage.message.length
+    });
     
-    req.flash('success_msg', 'Your message has been sent successfully');
+    const savedMessage = await newMessage.save();
+    console.log('Message saved successfully with ID:', savedMessage._id);
+    
+    // Verify the message was saved by querying it back
+    const verifyMessage = await Message.findById(savedMessage._id);
+    console.log('Verification - message exists in DB:', !!verifyMessage);
+    
+    // Count total messages in database
+    const totalMessages = await Message.countDocuments();
+    console.log('Total messages in database:', totalMessages);
+    
+    req.flash('success_msg', 'Your message has been sent successfully! We will get back to you soon.');
     res.redirect('/contact');
   } catch (error) {
     console.error('Contact form error:', error);
-    req.flash('error_msg', 'An error occurred while sending your message');
+    console.error('Error stack:', error.stack);
+    req.flash('error_msg', 'An error occurred while sending your message. Please try again.');
     res.redirect('/contact');
   }
 };

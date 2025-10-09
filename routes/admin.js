@@ -1,7 +1,12 @@
+
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
 const upload = require('../middleware/upload');
+
+// About page management
+router.get('/about', adminController.getEditAbout);
+router.post('/about', upload.single('profileImage'), adminController.updateAbout);
 
 // Admin dashboard
 router.get('/', adminController.getDashboard);
@@ -22,15 +27,22 @@ router.put('/artworks/:id', upload.fields([
 router.delete('/artworks/:id', adminController.deleteArtwork);
 
 // Message management
+router.get('/admins', adminController.getAdmins);
+router.get('/admins/new', adminController.getAddAdmin);
+router.post('/admins', adminController.createAdmin);
+router.get('/admins/:id/edit', adminController.getEditAdmin);
+router.post('/admins/:id/edit', adminController.updateAdmin);
+router.post('/admins/:id/delete', adminController.deleteAdmin);
 router.get('/messages', adminController.getMessages);
 router.get('/messages/:id', adminController.getMessage);
+router.get('/messages/:id/delete', adminController.getDeleteMessage);
 router.put('/messages/:id/read', adminController.markMessageAsRead);
+router.post('/messages/:id/toggle-read', adminController.toggleMessageRead);
 router.delete('/messages/:id', adminController.deleteMessage);
+
+router.post('/messages/:id/delete', adminController.deleteMessageForm);
 router.post('/messages/export', adminController.exportMessages);
 
 // Site styling
-router.get('/styling', adminController.getStyling);
-router.post('/styling', upload.single('logo'), adminController.updateStyling);
-router.post('/styling/reset', adminController.resetStyling);
 
 module.exports = router;

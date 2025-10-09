@@ -6,7 +6,7 @@ const crypto = require('crypto');
 // Generate secure admin credentials
 function generateSecureCredentials() {
   const adminEmail = 'admin@roshniartwork.com';
-  const adminPassword = crypto.randomBytes(16).toString('hex'); // 32 character random password
+  const adminPassword = 'admin123'; // Set a fixed password for reliable login
   return { adminEmail, adminPassword };
 }
 

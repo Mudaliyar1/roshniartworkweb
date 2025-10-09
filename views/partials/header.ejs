@@ -2,7 +2,8 @@
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container">
       <a class="navbar-brand" href="/">
-        <img src="<%= siteStyles.logoPath || '/images/default-logo.svg' %>" alt="Artist Logo" height="40">
+        <img src="/images/logo.svg" alt="Roshni's Art Portfolio" class="logo d-none d-md-block" height="40">
+        <img src="/images/logo-mobile.svg" alt="Roshni's Art" class="logo-mobile d-md-none" height="32">
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -21,6 +22,15 @@
           <li class="nav-item">
             <a class="nav-link <%= title === 'Contact' ? 'active' : '' %>" href="/contact">Contact</a>
           </li>
+          <% if (typeof user !== 'undefined' && user && user.isAdmin) { %>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/">Dashboard</a>
+            </li>
+          <% } else { %>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/login">Login</a>
+            </li>
+          <% } %>
         </ul>
       </div>
     </div>

@@ -1,0 +1,47 @@
+<!-- Simple Delete Confirmation -->
+<div class="container-fluid py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      
+      <!-- Simple Card -->
+      <div class="card shadow-sm">
+        <div class="card-body text-center">
+          
+          <!-- Warning Icon -->
+          <div class="text-danger mb-3">
+            <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
+          </div>
+          
+          <!-- Title -->
+          <h4 class="mb-3">Delete Message?</h4>
+          
+          <!-- Message Info -->
+          <div class="mb-4">
+            <p class="mb-2"><strong>From:</strong> <%= message.name %></p>
+            <p class="mb-2"><strong>Subject:</strong> <%= message.subject || 'No Subject' %></p>
+            <p class="text-muted small">
+              <%= new Date(message.createdAt).toLocaleDateString() %>
+            </p>
+          </div>
+          
+          <!-- Warning Text -->
+          <p class="text-muted mb-4">This action cannot be undone.</p>
+          
+          <!-- Buttons -->
+          <div class="d-flex justify-content-center gap-3">
+            <a href="/admin/messages" class="btn btn-secondary">
+              Cancel
+            </a>
+            <form action="/admin/messages/<%= message._id %>/delete" method="POST" class="d-inline">
+              <button type="submit" class="btn btn-danger">
+                Delete
+              </button>
+            </form>
+          </div>
+          
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>

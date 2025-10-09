@@ -93,7 +93,7 @@
       
       <div class="mb-4">
         <h4>Description</h4>
-        <div class="artwork-description">
+        <div class="artwork-description" style="word-break: break-word; white-space: pre-line; overflow-wrap: anywhere;">
           <%- artwork.description %>
         </div>
       </div>
@@ -157,6 +157,9 @@
           </a>
           <a href="https://pinterest.com/pin/create/button/?url=<%= encodeURIComponent(baseUrl + '/gallery/' + artwork.slug) %>&media=<%= encodeURIComponent(baseUrl + (artwork.images[0] ? artwork.images[0].path : '')) %>&description=<%= encodeURIComponent(artwork.title) %>" target="_blank" class="btn btn-outline-primary">
             <i class="bi bi-pinterest"></i>
+          </a>
+          <a href="https://wa.me/?text=<%= encodeURIComponent('Check out this artwork: ' + artwork.title + ' ' + baseUrl + '/gallery/' + artwork.slug) %>" target="_blank" class="btn btn-outline-primary">
+            <i class="bi bi-whatsapp"></i>
           </a>
         </div>
       </div>

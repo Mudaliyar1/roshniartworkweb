@@ -1,45 +1,35 @@
 <!-- Stats Cards -->
 <div class="row mb-4">
-  <div class="col-md-4">
-    <div class="card text-white bg-primary mb-3">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="card-title">Total Artworks</h6>
-            <h2 class="mb-0"><%= stats.artworkCount %></h2>
-          </div>
-          <i class="bi bi-image fs-1"></i>
-        </div>
+  <div class="col-lg-4 col-md-6 mb-3">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="bi bi-palette-fill"></i>
       </div>
+      <div class="stat-number"><%= (stats && typeof stats.artworkCount !== 'undefined') ? stats.artworkCount : 0 %></div>
+      <div class="stat-label">Total Artworks</div>
     </div>
   </div>
   
-  <div class="col-md-4">
-    <div class="card text-white bg-success mb-3">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="card-title">Messages</h6>
-            <h2 class="mb-0"><%= stats.messageCount %></h2>
-            <small><%= stats.unreadMessageCount %> unread</small>
-          </div>
-          <i class="bi bi-envelope fs-1"></i>
-        </div>
+  <div class="col-lg-4 col-md-6 mb-3">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="bi bi-chat-heart-fill"></i>
       </div>
+      <div class="stat-number"><%= (stats && typeof stats.messageCount !== 'undefined') ? stats.messageCount : 0 %></div>
+      <div class="stat-label">Messages</div>
+      <% if (stats && stats.unreadMessageCount > 0) { %>
+        <small class="text-muted"><%= stats.unreadMessageCount %> unread</small>
+      <% } %>
     </div>
   </div>
   
-  <div class="col-md-4">
-    <div class="card text-white bg-info mb-3">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="card-title">Media Files</h6>
-            <h2 class="mb-0"><%= stats.mediaCount %></h2>
-          </div>
-          <i class="bi bi-file-earmark-image fs-1"></i>
-        </div>
+  <div class="col-lg-4 col-md-6 mb-3">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="bi bi-images"></i>
       </div>
+      <div class="stat-number"><%= (stats && typeof stats.mediaCount !== 'undefined') ? stats.mediaCount : 0 %></div>
+      <div class="stat-label">Media Files</div>
     </div>
   </div>
 </div>
@@ -47,105 +37,111 @@
 <!-- Recent Activity -->
 <div class="row mb-4">
   <div class="col-md-6">
-    <div class="card">
+    <div class="dashboard-card">
       <div class="card-header">
-        <h5 class="card-title mb-0">Recent Artworks</h5>
+        <i class="bi bi-palette me-2"></i>Recent Artworks
       </div>
       <div class="card-body p-0">
         <div class="list-group list-group-flush">
           <% if (recentArtworks && recentArtworks.length > 0) { %>
             <% recentArtworks.forEach(artwork => { %>
-              <a href="/admin/artworks/<%= artwork._id %>/edit" class="list-group-item list-group-item-action">
+              <a href="/admin/artworks/<%= artwork._id %>/edit" class="list-group-item list-group-item-action border-0">
                 <div class="d-flex w-100 justify-content-between">
-                  <h6 class="mb-1"><%= artwork.title %></h6>
+                  <h6 class="mb-1">🎨 <%= artwork.title %></h6>
                   <small class="text-muted"><%= new Date(artwork.createdAt).toLocaleDateString() %></small>
                 </div>
                 <small class="text-muted">
-                  <%= artwork.isVisible ? 'Public' : 'Hidden' %> • 
-                  <%= artwork.images.length %> images
+                  <%= artwork.isVisible ? '👁️ Public' : '🔒 Hidden' %> • 
+                  📸 <%= artwork.images.length %> images
                 </small>
               </a>
             <% }); %>
           <% } else { %>
-            <div class="list-group-item text-center py-3">
-              <p class="mb-0">No artworks yet</p>
+            <div class="list-group-item text-center py-4 border-0">
+              <i class="bi bi-palette2 fs-2 text-muted mb-2 d-block"></i>
+              <p class="mb-0 text-muted">No artworks yet</p>
+              <small class="text-muted">Create your first masterpiece!</small>
             </div>
           <% } %>
         </div>
       </div>
-      <div class="card-footer text-center">
-        <a href="/admin/artworks" class="btn btn-sm btn-outline-primary">View All Artworks</a>
+      <div class="card-footer text-center" style="background: rgba(217, 70, 239, 0.05); border: none;">
+        <a href="/admin/artworks" class="btn btn-admin-primary btn-sm">
+          <i class="bi bi-palette me-1"></i>View All Artworks
+        </a>
       </div>
     </div>
   </div>
   
   <div class="col-md-6">
-    <div class="card">
+    <div class="dashboard-card">
       <div class="card-header">
-        <h5 class="card-title mb-0">Recent Messages</h5>
+        <i class="bi bi-chat-heart me-2"></i>Recent Messages
       </div>
       <div class="card-body p-0">
         <div class="list-group list-group-flush">
           <% if (recentMessages && recentMessages.length > 0) { %>
             <% recentMessages.forEach(message => { %>
-              <a href="/admin/messages/<%= message._id %>" class="list-group-item list-group-item-action <%= !message.isRead ? 'list-group-item-light' : '' %>">
+              <a href="/admin/messages/<%= message._id %>" class="list-group-item list-group-item-action border-0 <%= !message.isRead ? 'bg-light' : '' %>">
                 <div class="d-flex w-100 justify-content-between">
-                  <h6 class="mb-1"><%= message.subject %></h6>
+                  <h6 class="mb-1">
+                    <%= !message.isRead ? '💌' : '📩' %> <%= message.subject %>
+                  </h6>
                   <small class="text-muted"><%= new Date(message.createdAt).toLocaleDateString() %></small>
                 </div>
-                <p class="mb-1 text-truncate"><%= message.message.substring(0, 100) %></p>
-                <small class="text-muted">From: <%= message.name %> (<%= message.email %>)</small>
+                <p class="mb-1 text-truncate"><%= message.message.substring(0, 80) %>...</p>
+                <small class="text-muted">From: <%= message.name %></small>
               </a>
             <% }); %>
           <% } else { %>
-            <div class="list-group-item text-center py-3">
-              <p class="mb-0">No messages yet</p>
+            <div class="list-group-item text-center py-4 border-0">
+              <i class="bi bi-chat-heart fs-2 text-muted mb-2 d-block"></i>
+              <p class="mb-0 text-muted">No messages yet</p>
+              <small class="text-muted">Waiting for your first fan mail!</small>
             </div>
           <% } %>
         </div>
       </div>
-      <div class="card-footer text-center">
-        <a href="/admin/messages" class="btn btn-sm btn-outline-primary">View All Messages</a>
+      <div class="card-footer text-center" style="background: rgba(217, 70, 239, 0.05); border: none;">
+        <a href="/admin/messages" class="btn btn-admin-primary btn-sm">
+          <i class="bi bi-chat-heart me-1"></i>View All Messages
+        </a>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Quick Actions -->
-<div class="row">
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header">
-        <h5 class="card-title mb-0">Quick Actions</h5>
-      </div>
-      <div class="card-body">
-        <div class="row g-3">
-          <div class="col-md-3">
-            <a href="/admin/artworks/new" class="btn btn-outline-primary d-block py-3">
-              <i class="bi bi-plus-lg mb-2 d-block fs-4"></i>
-              Add New Artwork
-            </a>
-          </div>
-          <div class="col-md-3">
-            <a href="/admin/styling" class="btn btn-outline-primary d-block py-3">
-              <i class="bi bi-palette mb-2 d-block fs-4"></i>
-              Update Site Styling
-            </a>
-          </div>
-          <div class="col-md-3">
-            <a href="/admin/messages" class="btn btn-outline-primary d-block py-3">
-              <i class="bi bi-envelope mb-2 d-block fs-4"></i>
-              Check Messages
-            </a>
-          </div>
-          <div class="col-md-3">
-            <a href="/" target="_blank" class="btn btn-outline-secondary d-block py-3">
-              <i class="bi bi-eye mb-2 d-block fs-4"></i>
-              View Website
-            </a>
-          </div>
-        </div>
-      </div>
+<div class="quick-actions">
+  <a href="/admin/artworks/new" class="quick-action-card">
+    <div class="icon">
+      <i class="bi bi-plus-circle-fill"></i>
     </div>
-  </div>
+    <h5>✨ Add New Artwork</h5>
+    <p class="mb-0">Create and upload your latest masterpiece</p>
+  </a>
+  
+  <a href="/admin/styling" class="quick-action-card">
+    <div class="icon">
+      <i class="bi bi-brush-fill"></i>
+    </div>
+    <h5>🎨 Update Site Styling</h5>
+    <p class="mb-0">Customize colors, fonts, and layout</p>
+  </a>
+  
+  <a href="/admin/messages" class="quick-action-card">
+    <div class="icon">
+      <i class="bi bi-chat-heart-fill"></i>
+    </div>
+    <h5>💌 Check Messages</h5>
+    <p class="mb-0">Read messages from your fans and visitors</p>
+  </a>
+  
+  <a href="/" target="_blank" class="quick-action-card">
+    <div class="icon">
+      <i class="bi bi-eye-fill"></i>
+    </div>
+    <h5>👀 View Website</h5>
+    <p class="mb-0">See how your site looks to visitors</p>
+  </a>
 </div>

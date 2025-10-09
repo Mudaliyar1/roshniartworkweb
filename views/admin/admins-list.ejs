@@ -1,0 +1,33 @@
+<!-- Admin header/sidebar is included by the layout, do not include here -->
+<div class="container mt-4">
+  <h2>Admin Users</h2>
+  <a href="/admin/admins/new" class="btn btn-admin-primary mb-3">Add Admin</a>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>Created At</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (admins && admins.length > 0) { %>
+        <% admins.forEach(admin => { %>
+          <tr>
+            <td><%= admin.email %></td>
+            <td><%= new Date(admin.createdAt).toLocaleString() %></td>
+            <td>
+              <a href="/admin/admins/<%= admin._id %>/edit" class="btn btn-sm btn-warning">Edit</a>
+              <form action="/admin/admins/<%= admin._id %>/delete" method="POST" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this admin?')">Delete</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      <% } else { %>
+        <tr><td colspan="3" class="text-center">No admins found.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<!-- Sidebar is included by the layout, do not include here -->

@@ -1,27 +1,24 @@
-<div class="card shadow-sm">
-  <div class="card-body p-4">
+<div class="card shadow-sm cute-login-card" style="max-width: 400px; margin: 60px auto; border-radius: 18px; background: linear-gradient(135deg, #fdf2f8 0%, #fefcff 100%); box-shadow: 0 4px 24px rgba(217, 70, 239, 0.12);">
+  <div class="card-body p-4" style="border-radius: 18px;">
     <div class="text-center mb-4">
-      <img src="<%= siteStyles.logoPath || '/images/default-logo.svg' %>" alt="Artist Logo" height="60" class="mb-3">
-      <h2>Admin Login</h2>
-      <p class="text-muted">Enter your credentials to access the dashboard</p>
+      <h2 style="font-family: 'Montserrat', sans-serif; background: linear-gradient(135deg, #d946ef 0%, #c084fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700; font-size: 2.2rem;">Login</h2>
+      <p class="text-muted" style="font-size: 1.1rem; color: #be185d;">Enter your credentials to access the dashboard</p>
     </div>
-    
     <form action="/login" method="POST">
       <div class="mb-3">
-        <label for="email" class="form-label">Email</label>
-        <input type="email" class="form-control" id="email" name="email" required>
+        <label for="email" class="form-label" style="color: #d946ef; font-weight: 500;">Email</label>
+        <input type="email" class="form-control" id="email" name="email" required style="border-radius: 10px; border: 1px solid #f8bbd9; background: #fffafc;">
       </div>
       <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
-        <input type="password" class="form-control" id="password" name="password" required>
+        <label for="password" class="form-label" style="color: #d946ef; font-weight: 500;">Password</label>
+        <input type="password" class="form-control" id="password" name="password" required style="border-radius: 10px; border: 1px solid #f8bbd9; background: #fffafc;">
       </div>
       <div class="d-grid">
-        <button type="submit" class="btn btn-primary">Login</button>
+        <button type="submit" class="btn btn-primary" style="border-radius: 10px; font-weight: 600; font-size: 1.1rem;">Login</button>
       </div>
     </form>
-    
     <div class="text-center mt-4">
-      <a href="/" class="text-decoration-none">← Back to Website</a>
+      <a href="/" class="text-decoration-none" style="color: #d946ef; font-size: 1rem;">← Back to Website</a>
     </div>
   </div>
 </div>

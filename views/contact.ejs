@@ -1,60 +1,118 @@
-<div class="container py-5">
-  <div class="row">
-    <div class="col-lg-8 mx-auto">
-      <h1 class="mb-4">Contact Me</h1>
-      
-      <div class="card shadow-sm mb-5">
-        <div class="card-body p-4">
-          <form action="/contact" method="POST">
-            <div class="mb-3">
-              <label for="name" class="form-label">Your Name</label>
-              <input type="text" class="form-control" id="name" name="name" required>
+<div class="container-fluid">
+  <!-- Hero Section -->
+  <div class="hero-section text-center mb-5">
+    <h1 class="display-4 mb-3">💌 Let's Connect</h1>
+    <p class="lead">I'd love to hear from you! Share your thoughts, dreams, or commission ideas</p>
+  </div>
+
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="row g-5">
+          <!-- Contact Form -->
+          <div class="col-lg-7">
+            <div class="contact-form-container">
+              <h2 class="mb-4"><i class="bi bi-chat-heart me-2"></i>Send Me a Message</h2>
+              <p class="mb-4 text-muted">Whether you want to commission a piece, collaborate, or just say hello - I'm all ears! 💕</p>
+              
+              <form action="/contact" method="POST" class="contact-form">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label for="name" class="form-label">
+                      <i class="bi bi-person-fill me-1"></i>Your Beautiful Name
+                    </label>
+                    <input type="text" class="form-control" id="name" name="name" placeholder="What should I call you?" required>
+                  </div>
+                  
+                  <div class="col-md-6">
+                    <label for="email" class="form-label">
+                      <i class="bi bi-envelope-fill me-1"></i>Your Email Address
+                    </label>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="your@email.com" required>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="subject" class="form-label">
+                    <i class="bi bi-tag-fill me-1"></i>What's This About?
+                  </label>
+                  <select class="form-select" id="subject" name="subject">
+                    <option value="">Choose a topic...</option>
+                    <option value="Commission">🎨 Commission Request</option>
+                    <option value="Collaboration">🤝 Collaboration</option>
+                    <option value="General Inquiry">💬 General Question</option>
+                    <option value="Compliment">💕 Just wanted to say hello!</option>
+                    <option value="Other">✨ Something else magical</option>
+                  </select>
+                </div>
+                
+                <div class="mb-4">
+                  <label for="message" class="form-label">
+                    <i class="bi bi-chat-dots-fill me-1"></i>Your Message
+                  </label>
+                  <textarea class="form-control" id="message" name="message" rows="6" 
+                           placeholder="Tell me about your dreams, ideas, or just share what's on your heart..." required></textarea>
+                </div>
+                
+                <div class="d-grid">
+                  <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-send-fill me-2"></i>Send with Love 💕
+                  </button>
+                </div>
+              </form>
             </div>
-            
-            <div class="mb-3">
-              <label for="email" class="form-label">Your Email</label>
-              <input type="email" class="form-control" id="email" name="email" required>
-            </div>
-            
-            <div class="mb-3">
-              <label for="subject" class="form-label">Subject</label>
-              <input type="text" class="form-control" id="subject" name="subject" required>
-            </div>
-            
-            <div class="mb-3">
-              <label for="message" class="form-label">Message</label>
-              <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
-            </div>
-            
-            <div class="d-grid">
-              <button type="submit" class="btn btn-primary">Send Message</button>
-            </div>
-          </form>
-        </div>
-      </div>
-      
-      <div class="row g-4">
-        <div class="col-md-4">
-          <div class="text-center">
-            <i class="bi bi-envelope-fill fs-1 mb-3"></i>
-            <h5>Email</h5>
-            <p><a href="mailto:contact@example.com" class="text-decoration-none">contact@example.com</a></p>
           </div>
-        </div>
-        
-        <div class="col-md-4">
-          <div class="text-center">
-            <i class="bi bi-geo-alt-fill fs-1 mb-3"></i>
-            <h5>Location</h5>
-            <p>New Delhi, India</p>
-          </div>
-        </div>
-        
-        <div class="col-md-4">
-          <div class="text-center">
-            <i class="bi bi-instagram fs-1 mb-3"></i>
-            <h5>Social Media</h5>
-            <p><a href="https://instagram.com/example" target="_blank" class="text-decoration-none">@artisthandle</a></p>
+          
+          <!-- Contact Info & Social -->
+          <div class="col-lg-5">
+            <div class="contact-info-container h-100">
+              <h3 class="mb-4"><i class="bi bi-heart-fill me-2"></i>Other Ways to Connect</h3>
+              
+              <div class="contact-methods mb-5">
+                <div class="contact-item mb-4">
+                  <div class="contact-icon">
+                    <i class="bi bi-envelope-heart-fill"></i>
+                  </div>
+                  <div class="contact-details">
+                    <h5>Email Me Directly</h5>
+                    <p><a href="mailto:hello@roshnisart.com" class="text-decoration-none">hello@roshnisart.com</a></p>
+                    <small class="text-muted">I reply within 24 hours! 💫</small>
+                  </div>
+                </div>
+                
+
+                
+                <div class="contact-item mb-4">
+                  <div class="contact-icon">
+                    <i class="bi bi-clock-fill"></i>
+                  </div>
+                  <div class="contact-details">
+                    <h5>Best Times to Reach Me</h5>
+                    <p>Monday - Saturday<br>10:00 AM - 6:00 PM (IST)</p>
+                    <small class="text-muted">But art never sleeps! 🎨</small>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Social Media Links -->
+              <div class="social-media-section p-4 rounded-4" 
+                   style="background: linear-gradient(135deg, rgba(217, 70, 239, 0.05) 0%, rgba(248, 187, 217, 0.1) 100%);">
+                <h4 class="mb-3"><i class="bi bi-stars me-2"></i>Follow My Journey</h4>
+                <p class="mb-3">Join my creative community and be the first to see new artworks!</p>
+                
+                <div class="social-links-contact">
+                  <a href="https://instagram.com/roshnisart" target="_blank" class="social-contact-link instagram" title="Instagram">
+                    <i class="bi bi-instagram"></i>
+                    <span>@roshnisart</span>
+                  </a>
+                  <a href="https://youtube.com/roshnisart" target="_blank" class="social-contact-link youtube" title="YouTube">
+                    <i class="bi bi-youtube"></i>
+                    <span>Art Tutorials</span>
+                  </a>
+                  <!-- Facebook and Twitter links removed as requested -->
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

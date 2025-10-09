@@ -33,6 +33,8 @@ const MessageSchema = new mongoose.Schema({
 
 // Sanitize HTML before saving
 MessageSchema.pre('save', function(next) {
+  console.log('Message pre-save hook triggered for:', this.name);
+  
   if (this.isModified('message')) {
     this.message = sanitizeHtml(this.message, {
       allowedTags: [],
