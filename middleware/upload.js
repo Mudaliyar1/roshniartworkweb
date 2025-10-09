@@ -31,38 +31,8 @@ const storage = multer.diskStorage({
 
 // File filter
 const fileFilter = (req, file, cb) => {
-  // Allowed file types
-  const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
-  const allowedVideoTypes = ['video/mp4', 'video/webm'];
-  
-  if (file.fieldname === 'logo') {
-    // Logo can only be image
-    if (allowedImageTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Logo must be an image file (JPG, PNG, WebP, or SVG)'), false);
-    }
-  } else if (
-    file.fieldname === 'images' ||
-    file.fieldname === 'artworkImages' ||
-    file.fieldname === 'profileImage'
-  ) {
-    // Images (including About profile image)
-    if (allowedImageTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only JPG, PNG, WebP, and SVG images are allowed'), false);
-    }
-  } else if (file.fieldname === 'video' || file.fieldname === 'videoFile') {
-    // Videos
-    if (allowedVideoTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only MP4 and WebM videos are allowed'), false);
-    }
-  } else {
-    cb(null, false);
-  }
+  // Accept all file types
+  cb(null, true);
 };
 
 // File size limits

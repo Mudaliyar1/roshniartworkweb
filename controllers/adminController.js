@@ -393,18 +393,43 @@ exports.createArtwork = async (req, res) => {
       for (let i = 0; i < req.files.images.length; i++) {
         const file = req.files.images[i];
         const isMain = i === 0; // First image is main by default
-        // Generate thumbnail
-        const thumbnailFilename = `thumb-${path.basename(file.filename)}`;
-        const thumbnailPath = path.join(thumbnailDir, thumbnailFilename);
-        await sharp(file.path)
-          .resize(300, 300, { fit: 'inside' })
-          .toFile(path.join('public', 'uploads', 'thumbnails', thumbnailFilename));
-        // Add image to artwork
-        newArtwork.images.push({
-          path: `/uploads/images/${file.filename}`,
-          thumbnailPath: `/uploads/thumbnails/${thumbnailFilename}`,
-          isMain
-        });
+        
+        // Check if file is an image that Sharp can process
+        const imageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+        const isProcessableImage = imageTypes.includes(file.mimetype);
+        
+        if (isProcessableImage) {
+          // Generate thumbnail for image files
+          try {
+            const thumbnailFilename = `thumb-${path.basename(file.filename)}`;
+            const thumbnailPath = path.join(thumbnailDir, thumbnailFilename);
+            await sharp(file.path)
+              .resize(300, 300, { fit: 'inside' })
+              .toFile(path.join('public', 'uploads', 'thumbnails', thumbnailFilename));
+            
+            // Add image with thumbnail to artwork
+            newArtwork.images.push({
+              path: `/uploads/images/${file.filename}`,
+              thumbnailPath: `/uploads/thumbnails/${thumbnailFilename}`,
+              isMain
+            });
+          } catch (err) {
+            console.error('Error processing image:', err);
+            // Still add the file without thumbnail
+            newArtwork.images.push({
+              path: `/uploads/images/${file.filename}`,
+              thumbnailPath: '',
+              isMain
+            });
+          }
+        } else {
+          // For non-image files, add without thumbnail
+          newArtwork.images.push({
+            path: `/uploads/images/${file.filename}`,
+            thumbnailPath: '',
+            isMain
+          });
+        }
       }
     }
     
@@ -501,20 +526,32 @@ exports.updateArtwork = async (req, res) => {
       
       // Process each image
       for (const file of req.files.images) {
-        // Generate thumbnail
-        const thumbnailFilename = `thumb-${path.basename(file.filename)}`;
-        const thumbnailPath = path.join(thumbnailDir, thumbnailFilename);
+        // Check if file is a processable image type
+        const isImageType = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'].includes(file.mimetype);
         
-        await sharp(file.path)
-          .resize(300, 300, { fit: 'inside' })
-          .toFile(path.join('public', 'uploads', 'thumbnails', thumbnailFilename));
-        
-        // Add image to artwork
-        artwork.images.push({
-          path: `/uploads/images/${file.filename}`,
-          thumbnailPath: `/uploads/thumbnails/${thumbnailFilename}`,
-          isMain: artwork.images.length === 0 // Set as main if no other images
-        });
+        if (isImageType) {
+          // Generate thumbnail
+          const thumbnailFilename = `thumb-${path.basename(file.filename)}`;
+          const thumbnailPath = path.join(thumbnailDir, thumbnailFilename);
+          
+          await sharp(file.path)
+            .resize(300, 300, { fit: 'inside' })
+            .toFile(path.join('public', 'uploads', 'thumbnails', thumbnailFilename));
+          
+          // Add image to artwork with thumbnail
+          artwork.images.push({
+            path: `/uploads/images/${file.filename}`,
+            thumbnailPath: `/uploads/thumbnails/${thumbnailFilename}`,
+            isMain: artwork.images.length === 0 // Set as main if no other images
+          });
+        } else {
+          // Add non-image file without thumbnail
+          artwork.images.push({
+            path: `/uploads/images/${file.filename}`,
+            thumbnailPath: null,
+            isMain: artwork.images.length === 0 // Set as main if no other images
+          });
+        }
       }
     }
     

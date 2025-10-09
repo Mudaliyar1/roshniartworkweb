@@ -15,13 +15,13 @@ router.get('/', adminController.getDashboard);
 router.get('/artworks', adminController.getArtworks);
 router.get('/artworks/new', adminController.getNewArtwork);
 router.post('/artworks', upload.fields([
-  { name: 'images', maxCount: 10 },
+  { name: 'images', maxCount: 50 },
   { name: 'videoFile', maxCount: 1 }
 ]), adminController.createArtwork);
 router.get('/artworks/:id', adminController.getArtwork);
 router.get('/artworks/:id/edit', adminController.getArtwork);
 router.put('/artworks/:id', upload.fields([
-  { name: 'images', maxCount: 10 },
+  { name: 'images', maxCount: 50 },
   { name: 'videoFile', maxCount: 1 }
 ]), adminController.updateArtwork);
 router.delete('/artworks/:id', adminController.deleteArtwork);

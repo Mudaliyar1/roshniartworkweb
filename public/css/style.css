@@ -672,6 +672,37 @@ h1::after, h2::after {
   animation: fadeOutUp 2s ease-out forwards;
 }
 
+/* Mobile optimizations for cursor effects */
+@media (max-width: 768px) {
+  .cursor-heart {
+    font-size: 1.5rem; /* Larger on mobile for better visibility */
+    animation-duration: 1.5s; /* Slightly faster on mobile */
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .cursor-heart {
+    font-size: 1.8rem; /* Even larger for touch devices */
+    animation: fadeOutUpTouch 1.5s ease-out forwards;
+  }
+  
+  @keyframes fadeOutUpTouch {
+    0% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: translateY(-30px) scale(1.2);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-60px) scale(0.8);
+    }
+  }
+}
+
 @keyframes fadeOutUp {
   0% {
     opacity: 1;

@@ -37,6 +37,14 @@
             <label for="images" class="form-label">Upload Images</label>
             <input class="form-control" type="file" id="images" name="images" multiple accept="image/jpeg,image/png,image/webp">
             <div class="form-text">You can select multiple images. Supported formats: JPEG, PNG, WebP</div>
+            <div id="imageUploadLoading" class="mt-2 d-none">
+              <div class="d-flex align-items-center">
+                <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <span>Uploading images, please wait...</span>
+              </div>
+            </div>
           </div>
           
           <% if (artwork.images && artwork.images.length > 0) { %>
@@ -99,6 +107,14 @@
             <label for="videoFile" class="form-label">Upload Video</label>
             <input class="form-control" type="file" id="videoFile" name="videoFile" accept="video/mp4,video/webm">
             <div class="form-text">Supported formats: MP4, WebM</div>
+            <div id="videoUploadLoading" class="mt-2 d-none">
+              <div class="d-flex align-items-center">
+                <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <span>Uploading video, please wait...</span>
+              </div>
+            </div>
             
             <% if (artwork.video && artwork.video.type === 'file' && artwork.video.path) { %>
               <div class="mt-2">
@@ -137,7 +153,7 @@
           </div>
           
           <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" id="submitArtworkBtn" class="btn btn-primary">
               <%= artwork._id ? 'Update Artwork' : 'Create Artwork' %>
             </button>
             <a href="/admin/artworks" class="btn btn-outline-secondary">Cancel</a>

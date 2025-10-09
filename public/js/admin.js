@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initImageGallery();
     initDeleteConfirmations();
     initTooltips();
+    initUploadLoaders();
 });
 
 // Sidebar toggle functionality
@@ -400,3 +401,52 @@ document.head.appendChild(style);
 
 // Initialize auto-save
 initAutoSave();
+
+// Initialize upload loaders
+function initUploadLoaders() {
+    // Handle image uploads
+    const imageInput = document.getElementById('images');
+    const videoInput = document.getElementById('videoFile');
+    const submitBtn = document.getElementById('submitArtworkBtn');
+    const uploadOverlay = document.getElementById('uploadProgressOverlay');
+    const progressBar = document.getElementById('uploadProgressBar');
+    
+    // Handle form submission to show loading indicators
+    const artworkForm = document.querySelector('form[enctype="multipart/form-data"]');
+    if (artworkForm && submitBtn && uploadOverlay) {
+        artworkForm.addEventListener('submit', function(e) {
+            // Check if there are files to upload
+            const hasImageFiles = imageInput && imageInput.files.length > 0;
+            const hasVideoFile = videoInput && videoInput.files.length > 0 && 
+                document.getElementById('videoTypeFile') && 
+                document.getElementById('videoTypeFile').checked;
+                
+            if (hasImageFiles || hasVideoFile) {
+                e.preventDefault(); // Prevent default form submission
+                
+                // Show the upload overlay
+                uploadOverlay.classList.remove('d-none');
+                
+                // Simulate upload progress (in a real app, you would use XMLHttpRequest or Fetch API with progress events)
+                let progress = 0;
+                const interval = setInterval(function() {
+                    progress += Math.random() * 10;
+                    if (progress > 100) progress = 100;
+                    
+                    const percentage = Math.round(progress);
+                    progressBar.style.width = percentage + '%';
+                    progressBar.setAttribute('aria-valuenow', percentage);
+                    progressBar.textContent = percentage + '%';
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        // Submit the form after "upload" is complete
+                        setTimeout(function() {
+                            artworkForm.submit();
+                        }, 500);
+                    }
+                }, 500);
+            }
+        });
+    }
+}

@@ -39,21 +39,32 @@ function initScrollToTop() {
 
 // Cute cursor effects
 function initCursorEffects() {
-    if (window.innerWidth > 768) { // Only on desktop
-        document.addEventListener('click', function(e) {
-            const hearts = ['💖', '💕', '💗', '💓', '💝', '🌸', '✨', '🎀'];
-            const heart = document.createElement('div');
-            heart.className = 'cursor-heart';
-            heart.innerHTML = hearts[Math.floor(Math.random() * hearts.length)];
-            heart.style.left = e.pageX + 'px';
-            heart.style.top = e.pageY + 'px';
-            document.body.appendChild(heart);
+    // Function to handle both click and touch events
+    function createHeartEffect(x, y) {
+        const hearts = ['💖', '💕', '💗', '💓', '💝', '🌸', '✨', '🎀'];
+        const heart = document.createElement('div');
+        heart.className = 'cursor-heart';
+        heart.innerHTML = hearts[Math.floor(Math.random() * hearts.length)];
+        heart.style.left = x + 'px';
+        heart.style.top = y + 'px';
+        document.body.appendChild(heart);
 
-            setTimeout(() => {
-                heart.remove();
-            }, 2000);
-        });
+        setTimeout(() => {
+            heart.remove();
+        }, 2000);
     }
+
+    // Handle click events (desktop and mobile)
+    document.addEventListener('click', function(e) {
+        createHeartEffect(e.pageX, e.pageY);
+    });
+
+    // Handle touch events (mobile-specific)
+    document.addEventListener('touchstart', function(e) {
+        // Get the first touch point
+        const touch = e.touches[0];
+        createHeartEffect(touch.pageX, touch.pageY);
+    });
 }
 
 // Lazy loading for images
@@ -84,28 +95,26 @@ function initImageLazyLoading() {
 
 // Floating particles background
 function initFloatingParticles() {
-    if (window.innerWidth > 768) { // Only on desktop
-        const particleContainer = document.createElement('div');
-        particleContainer.className = 'floating-particles';
-        document.body.appendChild(particleContainer);
+    const particleContainer = document.createElement('div');
+    particleContainer.className = 'floating-particles';
+    document.body.appendChild(particleContainer);
 
-        const particles = ['🌸', '✨', '💫', '🌺', '🦋', '💖', '🌙', '⭐'];
-        
-        setInterval(() => {
-            if (document.querySelectorAll('.particle').length < 5) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.innerHTML = particles[Math.floor(Math.random() * particles.length)];
-                particle.style.left = Math.random() * 100 + 'vw';
-                particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
-                particleContainer.appendChild(particle);
+    const particles = ['🌸', '✨', '💫', '🌺', '🦋', '💖', '🌙', '⭐'];
+    
+    setInterval(() => {
+        if (document.querySelectorAll('.particle').length < 5) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.innerHTML = particles[Math.floor(Math.random() * particles.length)];
+            particle.style.left = Math.random() * 100 + 'vw';
+            particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            particleContainer.appendChild(particle);
 
-                setTimeout(() => {
-                    particle.remove();
-                }, 25000);
-            }
-        }, 3000);
-    }
+            setTimeout(() => {
+                particle.remove();
+            }, 25000);
+        }
+    }, 3000);
 }
 
 // Form enhancements
