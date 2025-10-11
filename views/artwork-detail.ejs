@@ -112,7 +112,7 @@
 
       <div class="mt-5">
         <h4>Comments</h4>
-        <% if (user) { %>
+        
           <div class="card mb-3">
             <div class="card-body">
               <h5 class="card-title">Leave a Comment</h5>
@@ -124,9 +124,7 @@
               </form>
             </div>
           </div>
-        <% } else { %>
-          <p class="text-muted">Please <a href="/login">log in</a> to leave a comment.</p>
-        <% } %>
+        
 
         <div id="commentsList" class="list-group">
           <!-- Comments will be loaded here by JavaScript -->
@@ -210,7 +208,6 @@
 
 <script>
   const artworkId = "<%= artwork._id %>";
-  const isAuthenticated = <%= user ? 'true' : 'false' %>;
 
   // Function to generate a random username
   function generateRandomUsername() {
@@ -289,13 +286,10 @@
 
   // Function to update like button status
   async function updateLikeStatus() {
-    console.log('isAuthenticated:', isAuthenticated); // Debugging line
-    if (!isAuthenticated) return;
     try {
       const response = await fetch(`/api/artworks/${artworkId}/likes/status`);
       const data = await response.json();
       if (data.success) {
-        console.log('Like status data:', data); // Debugging line
         const likeButton = document.getElementById('likeButton');
         if (data.liked) {
           likeButton.classList.add('btn-danger');
@@ -318,7 +312,7 @@
     commentForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const commentText = document.getElementById('commentText').value;
-
+  
       try {
         const response = await fetch(`/api/artworks/${artworkId}/comments`, {
           method: 'POST',
@@ -345,10 +339,6 @@
   const likeButton = document.getElementById('likeButton');
   if (likeButton) {
     likeButton.addEventListener('click', async () => {
-      if (!isAuthenticated) {
-        alert('Please log in to like this artwork.');
-        return;
-      }
       try {
         const response = await fetch(`/api/artworks/${artworkId}/likes`, {
           method: 'POST'

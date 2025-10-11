@@ -13,7 +13,7 @@ router.get('/artworks', apiController.getArtworks);
 router.get('/artworks/:slug', apiController.getArtworkBySlug);
 
 // Comment and Like API routes
-router.post('/artworks/:id/comments', isAuthenticated, apiController.addComment);
+router.post('/artworks/:id/comments', apiController.addComment);
 router.get('/artworks/:id/comments', apiController.getComments);
 router.post('/artworks/:id/likes', isAuthenticated, apiController.toggleLike);
 router.get('/artworks/:id/likes/count', apiController.getLikeCount);

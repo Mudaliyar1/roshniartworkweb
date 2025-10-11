@@ -186,12 +186,8 @@ exports.getArtworkBySlug = async (req, res) => {
 // Add a comment to an artwork
 exports.addComment = async (req, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ success: false, message: 'Unauthorized: Please log in to comment.' });
-    }
     const { text } = req.body;
     const { id } = req.params;
-    const userId = req.user.id;
 
     if (!text) {
       return res.status(400).json({ success: false, message: 'Comment text is required.' });
@@ -204,7 +200,7 @@ exports.addComment = async (req, res) => {
 
     const newComment = new Comment({
       artwork: id,
-      user: req.user.id, // Assuming user is authenticated and req.user is available
+      user: undefined, // Explicitly set user to undefined for anonymous comments
       text
     });
     await newComment.save();
@@ -223,7 +219,7 @@ exports.addComment = async (req, res) => {
 exports.getComments = async (req, res) => {
   try {
     const { id } = req.params;
-    const comments = await Comment.find({ artwork: id }).populate('user', 'username').sort({ createdAt: -1 });
+    const comments = await Comment.find({ artwork: id }).sort({ createdAt: -1 });
     res.json({ success: true, comments });
   } catch (error) {
     console.error('Get comments API error:', error);
