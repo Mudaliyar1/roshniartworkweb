@@ -1,4 +1,7 @@
 const Artwork = require('../models/Artwork');
+const Comment = require('../models/Comment');
+const Like = require('../models/Like');
+const User = require('../models/User');
 
 // Reorder artwork images
 exports.reorderArtworkImages = async (req, res) => {
@@ -177,5 +180,118 @@ exports.getArtworkBySlug = async (req, res) => {
   } catch (error) {
     console.error('Get artwork API error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// Add a comment to an artwork
+exports.addComment = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Unauthorized: Please log in to comment.' });
+    }
+    const { text } = req.body;
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    if (!text) {
+      return res.status(400).json({ success: false, message: 'Comment text is required.' });
+    }
+
+    const artwork = await Artwork.findById(id);
+    if (!artwork) {
+      return res.status(404).json({ success: false, message: 'Artwork not found.' });
+    }
+
+    const newComment = new Comment({
+      artwork: id,
+      user: req.user.id, // Assuming user is authenticated and req.user is available
+      text
+    });
+    await newComment.save();
+
+    artwork.comments.push(newComment._id);
+    await artwork.save();
+
+    res.status(201).json({ success: true, message: 'Comment added successfully.', comment: newComment });
+  } catch (error) {
+    console.error('Add comment API error:', error);
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+// Get comments for an artwork
+exports.getComments = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const comments = await Comment.find({ artwork: id }).populate('user', 'username').sort({ createdAt: -1 });
+    res.json({ success: true, comments });
+  } catch (error) {
+    console.error('Get comments API error:', error);
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+// Toggle like on an artwork
+exports.toggleLike = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Unauthorized: Please log in to like artworks.' });
+    }
+    const { id } = req.params;
+    const userId = req.user.id; // Assuming user is authenticated
+
+    const artwork = await Artwork.findById(id);
+    if (!artwork) {
+      return res.status(404).json({ success: false, message: 'Artwork not found.' });
+    }
+
+    const existingLike = await Like.findOne({ artwork: id, user: userId });
+
+    if (existingLike) {
+      // Unlike
+      await Like.deleteOne({ _id: existingLike._id });
+      artwork.likes.pull(existingLike._id);
+      await artwork.save();
+      res.json({ success: true, message: 'Artwork unliked.', liked: false });
+    } else {
+      // Like
+      const newLike = new Like({
+        artwork: id,
+        user: userId
+      });
+      await newLike.save();
+      artwork.likes.push(newLike._id);
+      await artwork.save();
+      res.status(201).json({ success: true, message: 'Artwork liked.', liked: true });
+    }
+  } catch (error) {
+    console.error('Toggle like API error:', error);
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+// Get like count for an artwork
+exports.getLikeCount = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const likeCount = await Like.countDocuments({ artwork: id });
+    res.json({ success: true, count: likeCount });
+  } catch (error) {
+    console.error('Get like count API error:', error);
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+};
+
+// Get like status for a user on an artwork
+exports.getLikeStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id; // Assuming user is authenticated
+
+    const liked = await Like.exists({ artwork: id, user: userId });
+    res.json({ success: true, liked: !!liked });
+  } catch (error) {
+    console.error('Get like status API error:', error);
+    res.status(500).json({ success: false, message: 'Server error.' });
   }
 };

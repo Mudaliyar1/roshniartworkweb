@@ -1,6 +1,6 @@
 // Authentication middleware
 exports.isAuthenticated = (req, res, next) => {
-  if (req.session.user && req.session.user.isAdmin) {
+  if (req.session.user) { // Check if any user is logged in
     return next();
   }
   req.flash('error_msg', 'Please log in to access this page');
@@ -9,8 +9,8 @@ exports.isAuthenticated = (req, res, next) => {
 
 // Already authenticated middleware (for login page)
 exports.isAlreadyAuthenticated = (req, res, next) => {
-  if (req.session.user && req.session.user.isAdmin) {
-    return res.redirect('/admin');
+  if (req.session.user) { // Check if any user is logged in
+    return res.redirect('/'); // Redirect to home or dashboard if already logged in
   }
   next();
 };

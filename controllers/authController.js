@@ -39,6 +39,7 @@ exports.postLogin = async (req, res) => {
     req.session.user = {
       id: user._id,
       email: user.email,
+      username: user.username,
       isAdmin: user.isAdmin
     };
     

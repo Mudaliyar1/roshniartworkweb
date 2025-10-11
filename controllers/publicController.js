@@ -2,6 +2,7 @@ const Artwork = require('../models/Artwork');
 const Message = require('../models/Message');
 const sanitizeHtml = require('sanitize-html');
 const About = require('../models/About');
+const User = require('../models/User');
 
 // Home page
 exports.getHomePage = async (req, res) => {
@@ -100,7 +101,7 @@ exports.getArtworkDetail = async (req, res) => {
     const artwork = await Artwork.findOne({
       slug: req.params.slug,
       visibility: 'public'
-    });
+    }).populate('comments').populate('likes');
     
     if (!artwork) {
       return res.status(404).render('error', {
@@ -123,7 +124,8 @@ exports.getArtworkDetail = async (req, res) => {
       title: artwork.title,
       artwork,
       relatedArtworks,
-      baseUrl: `${req.protocol}://${req.get('host')}`
+      baseUrl: `${req.protocol}://${req.get('host')}`,
+      user: req.user
     });
   } catch (error) {
     console.error('Artwork detail error:', error);

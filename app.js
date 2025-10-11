@@ -80,6 +80,7 @@ app.use((req, res, next) => {
   res.locals.success_msg = req.flash('success_msg');
   res.locals.error_msg = req.flash('error_msg');
   res.locals.user = req.session.user || null;
+  req.user = req.session.user || null; // Populate req.user
   next();
 });
 

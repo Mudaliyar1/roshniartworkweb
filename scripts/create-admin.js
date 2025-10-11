@@ -6,8 +6,9 @@ const crypto = require('crypto');
 // Generate secure admin credentials
 function generateSecureCredentials() {
   const adminEmail = 'admin@roshniartwork.com';
+  const adminUsername = 'admin';
   const adminPassword = 'admin123'; // Set a fixed password for reliable login
-  return { adminEmail, adminPassword };
+  return { adminEmail, adminUsername, adminPassword };
 }
 
 async function createAdmin() {
@@ -17,20 +18,22 @@ async function createAdmin() {
     console.log('Connected to MongoDB');
 
     // Generate secure credentials
-    const { adminEmail, adminPassword } = generateSecureCredentials();
+    const { adminEmail, adminUsername, adminPassword } = generateSecureCredentials();
 
     // Check if admin already exists
     const existingAdmin = await User.findOne({ email: adminEmail });
     
     if (existingAdmin) {
-      console.log('Admin user already exists. Updating password...');
+      console.log('Admin user already exists. Updating password and username...');
       existingAdmin.password = adminPassword;
+      existingAdmin.username = adminUsername;
       await existingAdmin.save();
-      console.log('Admin password updated successfully!');
+      console.log('Admin password and username updated successfully!');
     } else {
       // Create new admin user
       const adminUser = new User({
         email: adminEmail,
+        username: adminUsername,
         password: adminPassword,
         isAdmin: true
       });
@@ -42,6 +45,7 @@ async function createAdmin() {
     console.log('\n🔐 ADMIN CREDENTIALS (SAVE THESE SECURELY):');
     console.log('=====================================');
     console.log(`Email: ${adminEmail}`);
+    console.log(`Username: ${adminUsername}`);
     console.log(`Password: ${adminPassword}`);
     console.log('=====================================\n');
 

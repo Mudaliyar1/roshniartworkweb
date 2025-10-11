@@ -12,4 +12,11 @@ router.delete('/artworks/:id/images/:imageIndex', isAuthenticated, apiController
 router.get('/artworks', apiController.getArtworks);
 router.get('/artworks/:slug', apiController.getArtworkBySlug);
 
+// Comment and Like API routes
+router.post('/artworks/:id/comments', isAuthenticated, apiController.addComment);
+router.get('/artworks/:id/comments', apiController.getComments);
+router.post('/artworks/:id/likes', isAuthenticated, apiController.toggleLike);
+router.get('/artworks/:id/likes/count', apiController.getLikeCount);
+router.get('/artworks/:id/likes/status', isAuthenticated, apiController.getLikeStatus);
+
 module.exports = router;

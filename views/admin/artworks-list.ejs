@@ -44,6 +44,8 @@
             <th>Year</th>
             <th>Tags</th>
             <th>Status</th>
+            <th>Comments</th>
+            <th>Likes</th>
             <th style="width: 150px;">Actions</th>
           </tr>
         </thead>
@@ -76,6 +78,14 @@
                   <span class="badge <%= artwork.visibility === 'public' ? 'bg-success' : 'bg-secondary' %>">
                     <%= artwork.visibility === 'public' ? 'Public' : 'Hidden' %>
                   </span>
+                </td>
+                <td>
+                  <a href="/admin/artworks/<%= artwork._id %>/comments" class="btn btn-sm btn-outline-info">
+                    <%= artwork.comments.length %> Comments
+                  </a>
+                </td>
+                <td>
+                  <%= artwork.likes.length %> Likes
                 </td>
                 <td>
                   <div class="btn-group btn-group-sm">

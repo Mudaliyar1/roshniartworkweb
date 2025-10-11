@@ -26,6 +26,10 @@ router.put('/artworks/:id', upload.fields([
 ]), adminController.updateArtwork);
 router.delete('/artworks/:id', adminController.deleteArtwork);
 
+// Comment management
+router.get('/artworks/:id/comments', adminController.getArtworkComments);
+router.delete('/comments/delete/:id', adminController.deleteComment);
+
 // Message management
 router.get('/admins', adminController.getAdmins);
 router.get('/admins/new', adminController.getAddAdmin);

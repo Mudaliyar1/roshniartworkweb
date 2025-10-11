@@ -104,6 +104,35 @@
           <i class="bi bi-share"></i> Share
         </button>
       </div>
+
+      <div class="mt-4 d-flex align-items-center">
+        <button id="likeButton" class="btn btn-outline-danger me-2"><i class="bi bi-heart"></i></button>
+        <span id="likeCount" class="badge bg-secondary">0 Likes</span>
+      </div>
+
+      <div class="mt-5">
+        <h4>Comments</h4>
+        <% if (user) { %>
+          <div class="card mb-3">
+            <div class="card-body">
+              <h5 class="card-title">Leave a Comment</h5>
+              <form id="commentForm">
+                <div class="mb-3">
+                  <textarea class="form-control" id="commentText" rows="3" placeholder="Your comment..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit Comment</button>
+              </form>
+            </div>
+          </div>
+        <% } else { %>
+          <p class="text-muted">Please <a href="/login">log in</a> to leave a comment.</p>
+        <% } %>
+
+        <div id="commentsList" class="list-group">
+          <!-- Comments will be loaded here by JavaScript -->
+          <p class="text-center text-muted mt-3">Loading comments...</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -176,5 +205,177 @@
     setTimeout(() => {
       this.innerHTML = 'Copy';
     }, 2000);
+  });
+</script>
+
+<script>
+  const artworkId = "<%= artwork._id %>";
+  const isAuthenticated = <%= user ? 'true' : 'false' %>;
+
+  // Function to generate a random username
+  function generateRandomUsername() {
+    const adjectives = ['Happy', 'Creative', 'Artistic', 'Vibrant', 'Inspired', 'Dreamy', 'Colorful', 'Unique', 'Bold', 'Gentle'];
+    const nouns = ['Artist', 'Viewer', 'Lover', 'Explorer', 'Critic', 'Fan', 'Soul', 'Mind', 'Spirit', 'Creator'];
+    const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+    const randomNumber = Math.floor(Math.random() * 1000);
+    return `${randomAdjective}${randomNoun}${randomNumber}`;
+  }
+
+  // Function to fetch and display comments
+  async function fetchComments() {
+    try {
+      const response = await fetch(`/api/artworks/${artworkId}/comments`);
+      const data = await response.json();
+      const commentsList = document.getElementById('commentsList');
+      commentsList.innerHTML = ''; // Clear existing comments
+
+      if (data.success && data.comments.length > 0) {
+        const allComments = data.comments;
+        let commentsToShow = 3; // Initially show 3 comments
+
+        function renderComments(comments) {
+          commentsList.innerHTML = ''; // Clear before rendering
+          comments.forEach(comment => {
+            const username = comment.user && comment.user.username ? comment.user.username : generateRandomUsername();
+            const commentElement = `
+              <div class="list-group-item list-group-item-action flex-column align-items-start">
+                <div class="d-flex w-100 justify-content-between">
+                  <h5 class="mb-1">${username}</h5>
+                  <small>${new Date(comment.createdAt).toLocaleDateString()}</small>
+                </div>
+                <p class="mb-1">${comment.text}</p>
+              </div>
+            `;
+            commentsList.innerHTML += commentElement;
+          });
+        }
+
+        renderComments(allComments.slice(0, commentsToShow));
+
+        if (allComments.length > commentsToShow) {
+          const viewMoreBtn = document.createElement('button');
+          viewMoreBtn.classList.add('btn', 'btn-link', 'mt-2');
+          viewMoreBtn.textContent = 'View more comments';
+          viewMoreBtn.addEventListener('click', () => {
+            commentsToShow = allComments.length; // Show all comments
+            renderComments(allComments);
+            viewMoreBtn.style.display = 'none'; // Hide button after showing all
+          });
+          commentsList.appendChild(viewMoreBtn);
+        }
+
+      } else {
+        commentsList.innerHTML = '<p class="text-center text-muted mt-3">No comments yet.</p>';
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      document.getElementById('commentsList').innerHTML = '<p class="text-center text-danger mt-3">Error loading comments.</p>';
+    }
+  }
+
+  // Function to update like count
+  async function updateLikeCount() {
+    try {
+      const response = await fetch(`/api/artworks/${artworkId}/likes/count`);
+      const data = await response.json();
+      if (data.success) {
+        document.getElementById('likeCount').textContent = `${data.count} Likes`;
+      }
+    } catch (error) {
+      console.error('Error fetching like count:', error);
+    }
+  }
+
+  // Function to update like button status
+  async function updateLikeStatus() {
+    console.log('isAuthenticated:', isAuthenticated); // Debugging line
+    if (!isAuthenticated) return;
+    try {
+      const response = await fetch(`/api/artworks/${artworkId}/likes/status`);
+      const data = await response.json();
+      if (data.success) {
+        console.log('Like status data:', data); // Debugging line
+        const likeButton = document.getElementById('likeButton');
+        if (data.liked) {
+          likeButton.classList.add('btn-danger');
+          likeButton.classList.remove('btn-outline-danger');
+          likeButton.innerHTML = '<i class="bi bi-heart-fill"></i>'; // Filled heart icon
+        } else {
+          likeButton.classList.add('btn-outline-danger');
+          likeButton.classList.remove('btn-danger');
+          likeButton.innerHTML = '<i class="bi bi-heart"></i>'; // Outlined heart icon
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching like status:', error);
+    }
+  }
+
+  // Event listener for comment form submission
+  const commentForm = document.getElementById('commentForm');
+  if (commentForm) {
+    commentForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const commentText = document.getElementById('commentText').value;
+
+      try {
+        const response = await fetch(`/api/artworks/${artworkId}/comments`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ text: commentText })
+        });
+        const data = await response.json();
+        if (data.success) {
+          document.getElementById('commentText').value = '';
+          fetchComments(); // Refresh comments
+        } else {
+          alert(data.message || 'Failed to add comment.');
+        }
+      } catch (error) {
+        console.error('Error submitting comment:', error);
+        alert('Error submitting comment.');
+      }
+    });
+  }
+
+  // Event listener for like button
+  const likeButton = document.getElementById('likeButton');
+  if (likeButton) {
+    likeButton.addEventListener('click', async () => {
+      if (!isAuthenticated) {
+        alert('Please log in to like this artwork.');
+        return;
+      }
+      try {
+        const response = await fetch(`/api/artworks/${artworkId}/likes`, {
+          method: 'POST'
+        });
+        const data = await response.json();
+        if (data.success) {
+          updateLikeCount();
+          updateLikeStatus();
+        } else {
+          alert(data.message || 'Failed to toggle like.');
+        }
+      } catch (error) {
+        console.error('Error toggling like:', error);
+        alert('Error toggling like.');
+      }
+    });
+  }
+
+  // Initial load
+  document.addEventListener('DOMContentLoaded', () => {
+    fetchComments();
+    updateLikeCount();
+    // Ensure like button always starts with the correct emoji
+    // const likeButton = document.getElementById('likeButton');
+    // if (likeButton) {
+    //   likeButton.innerHTML = '💔'; // Default to broken heart
+    // }
+    updateLikeStatus();
   });
 </script>

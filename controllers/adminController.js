@@ -1,5 +1,7 @@
 // --- ABOUT PAGE MANAGEMENT ---
 const About = require('../models/About');
+const Artwork = require('../models/Artwork');
+const Comment = require('../models/Comment');
 
 // Show About edit form
 exports.getEditAbout = async (req, res) => {
@@ -160,7 +162,6 @@ exports.deleteAdmin = async (req, res) => {
     res.redirect('/admin/admins');
   }
 };
-const Artwork = require('../models/Artwork');
 const Message = require('../models/Message');
 const SiteStyling = require('../models/SiteStyling');
 const sharp = require('sharp');
@@ -307,6 +308,8 @@ exports.getArtworks = async (req, res) => {
     
     // Get paginated artworks
     const artworks = await Artwork.find(query)
+      .populate('comments')
+      .populate('likes')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -941,5 +944,69 @@ exports.resetStyling = async (req, res) => {
     console.error('Reset styling error:', error);
     req.flash('error_msg', 'An error occurred while resetting styling');
     res.redirect('/admin/styling');
+  }
+};
+
+// Get artwork comments
+// Function to generate a random username (server-side)
+function generateRandomUsername() {
+  const adjectives = ['Happy', 'Creative', 'Artistic', 'Vibrant', 'Inspired', 'Dreamy', 'Colorful', 'Unique', 'Bold', 'Gentle'];
+  const nouns = ['Artist', 'Viewer', 'Lover', 'Explorer', 'Critic', 'Fan', 'Soul', 'Mind', 'Spirit', 'Creator'];
+  const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+  const randomNumber = Math.floor(Math.random() * 1000);
+  return `${randomAdjective}${randomNoun}${randomNumber}`;
+}
+
+exports.getArtworkComments = async (req, res) => {
+  try {
+    const artwork = await Artwork.findById(req.params.id);
+    
+    if (!artwork) {
+      req.flash('error', 'Artwork not found.');
+      return res.redirect('/admin/artworks');
+    }
+    const comments = await Comment.find({ artwork: req.params.id }).populate('user', 'username');
+
+    comments.forEach(comment => {
+      if (comment.user && comment.user.username) {
+        comment.displayUsername = comment.user.username;
+      } else {
+        comment.displayUsername = generateRandomUsername();
+      }
+    });
+
+    res.render('admin/artwork-comments', {
+      title: `Comments for ${artwork.title}`,
+      layout: 'layouts/admin',
+      artwork,
+      comments,
+      currentRoute: '/admin/artworks'
+    });
+  } catch (error) {
+    console.error(error);
+    req.flash('error', 'Error fetching artwork comments.');
+    res.redirect('/admin/artworks');
+  }
+};
+
+exports.deleteComment = async (req, res) => {
+  try {
+    const comment = await Comment.findById(req.params.id);
+    const artworkId = comment.artwork;
+    if (!comment) {
+      req.flash('error', 'Comment not found.');
+      return res.redirect('back');
+    }
+
+    await Comment.deleteOne({ _id: req.params.id });
+    await Artwork.findByIdAndUpdate(artworkId, { $pull: { comments: comment._id } });
+
+    req.flash('success', 'Comment deleted successfully.');
+    res.redirect(`/admin/artworks/${artworkId}/comments`);
+  } catch (error) {
+    console.error(error);
+    req.flash('error', 'Error deleting comment.');
+    res.redirect('back');
   }
 };
