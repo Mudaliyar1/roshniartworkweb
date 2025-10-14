@@ -2,6 +2,19 @@
 const About = require('../models/About');
 const Artwork = require('../models/Artwork');
 const Comment = require('../models/Comment');
+const Media = require('../models/Media'); // Import the Media model
+const Backup = require('../models/Backup'); // Import the Backup model
+const User = require('../models/User');
+const Message = require('../models/Message');
+const SiteStyling = require('../models/SiteStyling');
+const sharp = require('sharp');
+const mongoose = require('mongoose');
+const path = require('path');
+const fs = require('fs');
+const sanitizeHtml = require('sanitize-html');
+const { createObjectCsvWriter } = require('csv-writer');
+
+const uploadDir = path.join(__dirname, '../public/uploads');
 
 // Show About edit form
 exports.getEditAbout = async (req, res) => {
@@ -51,7 +64,6 @@ exports.updateAbout = async (req, res) => {
   }
 };
 // --- ADMIN PROFILE MANAGEMENT ---
-const User = require('../models/User');
 
 // List all admins
 exports.getAdmins = async (req, res) => {
@@ -162,13 +174,6 @@ exports.deleteAdmin = async (req, res) => {
     res.redirect('/admin/admins');
   }
 };
-const Message = require('../models/Message');
-const SiteStyling = require('../models/SiteStyling');
-const sharp = require('sharp');
-const fs = require('fs');
-const path = require('path');
-const sanitizeHtml = require('sanitize-html');
-const { createObjectCsvWriter } = require('csv-writer');
 
 // Dashboard
 exports.getDashboard = async (req, res) => {
@@ -203,7 +208,7 @@ exports.getDashboard = async (req, res) => {
     
     try {
       // Count media files (images and videos)
-      const artworks = await Artwork.find().select('images video');
+      const artworks = await Artwork.find().select('images video').populate('images.mediaId').populate('video.mediaId');
       artworks.forEach(artwork => {
         if (artwork.images && Array.isArray(artwork.images)) {
           mediaCount += artwork.images.length;
@@ -310,6 +315,7 @@ exports.getArtworks = async (req, res) => {
     const artworks = await Artwork.find(query)
       .populate('comments')
       .populate('likes')
+      .populate('images.mediaId')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -389,50 +395,36 @@ exports.createArtwork = async (req, res) => {
     
     // Process uploaded images (support multer.fields)
     if (req.files && req.files.images && req.files.images.length > 0) {
-      // Create thumbnails directory if it doesn't exist
-      const thumbnailDir = './public/uploads/thumbnails';
-      fs.mkdirSync(thumbnailDir, { recursive: true });
-      // Process each image
       for (let i = 0; i < req.files.images.length; i++) {
         const file = req.files.images[i];
         const isMain = i === 0; // First image is main by default
-        
-        // Check if file is an image that Sharp can process
-        const imageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
-        const isProcessableImage = imageTypes.includes(file.mimetype);
-        
-        if (isProcessableImage) {
-          // Generate thumbnail for image files
-          try {
-            const thumbnailFilename = `thumb-${path.basename(file.filename)}`;
-            const thumbnailPath = path.join(thumbnailDir, thumbnailFilename);
-            await sharp(file.path)
-              .resize(300, 300, { fit: 'inside' })
-              .toFile(path.join('public', 'uploads', 'thumbnails', thumbnailFilename));
-            
-            // Add image with thumbnail to artwork
-            newArtwork.images.push({
-              path: `/uploads/images/${file.filename}`,
-              thumbnailPath: `/uploads/thumbnails/${thumbnailFilename}`,
-              isMain
-            });
-          } catch (err) {
-            console.error('Error processing image:', err);
-            // Still add the file without thumbnail
-            newArtwork.images.push({
-              path: `/uploads/images/${file.filename}`,
-              thumbnailPath: '',
-              isMain
-            });
-          }
-        } else {
-          // For non-image files, add without thumbnail
-          newArtwork.images.push({
-            path: `/uploads/images/${file.filename}`,
-            thumbnailPath: '',
-            isMain
-          });
+
+        const thumbnailDir = './public/uploads/thumbnails';
+        if (!fs.existsSync(thumbnailDir)) {
+          fs.mkdirSync(thumbnailDir, { recursive: true });
         }
+
+        const thumbnailFilename = `thumb-${file.filename}`;
+        await sharp(file.path)
+          .resize(300, 300, { fit: 'inside' })
+          .toFile(path.join('public', 'uploads', 'thumbnails', thumbnailFilename));
+        const thumbnailFilePath = `/uploads/thumbnails/${thumbnailFilename}`;
+
+        const newMedia = new Media({
+          fileName: file.originalname,
+          originalName: file.originalname,
+          fileType: file.mimetype,
+          fileSize: file.size,
+          filePath: `/uploads/${file.filename}`, // Use file.filename directly for consistency
+          thumbnailPath: thumbnailFilePath, // Set thumbnailPath here
+          description: req.body[`imageDescription-${i}`] || '',
+        });
+        await newMedia.save(); // Save newMedia after thumbnailPath is set
+
+        newArtwork.images.push({
+          mediaId: newMedia._id,
+          isMain,
+        });
       }
     }
     
@@ -450,7 +442,7 @@ exports.createArtwork = async (req, res) => {
 // Get single artwork
 exports.getArtwork = async (req, res) => {
   try {
-    const artwork = await Artwork.findById(req.params.id);
+    const artwork = await Artwork.findById(req.params.id).populate('images.mediaId');
     
     if (!artwork) {
       req.flash('error_msg', 'Artwork not found');
@@ -523,38 +515,36 @@ exports.updateArtwork = async (req, res) => {
     
     // Process new images
     if (req.files && req.files.images && req.files.images.length > 0) {
-      // Create thumbnails directory if it doesn't exist
-      const thumbnailDir = './public/uploads/thumbnails';
-      fs.mkdirSync(thumbnailDir, { recursive: true });
-      
-      // Process each image
-      for (const file of req.files.images) {
-        // Check if file is a processable image type
-        const isImageType = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'].includes(file.mimetype);
-        
-        if (isImageType) {
-          // Generate thumbnail
-          const thumbnailFilename = `thumb-${path.basename(file.filename)}`;
-          const thumbnailPath = path.join(thumbnailDir, thumbnailFilename);
-          
-          await sharp(file.path)
-            .resize(300, 300, { fit: 'inside' })
-            .toFile(path.join('public', 'uploads', 'thumbnails', thumbnailFilename));
-          
-          // Add image to artwork with thumbnail
-          artwork.images.push({
-            path: `/uploads/images/${file.filename}`,
-            thumbnailPath: `/uploads/thumbnails/${thumbnailFilename}`,
-            isMain: artwork.images.length === 0 // Set as main if no other images
-          });
-        } else {
-          // Add non-image file without thumbnail
-          artwork.images.push({
-            path: `/uploads/images/${file.filename}`,
-            thumbnailPath: null,
-            isMain: artwork.images.length === 0 // Set as main if no other images
-          });
+      for (let i = 0; i < req.files.images.length; i++) {
+        const file = req.files.images[i];
+        const isMain = req.body[`mainImage-${i}`] === 'on';
+
+        const thumbnailDir = './public/uploads/thumbnails';
+        if (!fs.existsSync(thumbnailDir)) {
+          fs.mkdirSync(thumbnailDir, { recursive: true });
         }
+
+        const thumbnailFilename = `thumb-${file.filename}`;
+        await sharp(file.path)
+          .resize(300, 300, { fit: 'inside' })
+          .toFile(path.join('public', 'uploads', 'thumbnails', thumbnailFilename));
+        const thumbnailFilePath = `/uploads/thumbnails/${thumbnailFilename}`;
+
+        const newMedia = new Media({
+          fileName: file.originalname,
+          originalName: file.originalname,
+          fileType: file.mimetype,
+          fileSize: file.size,
+          filePath: `/uploads/${file.filename}`,
+          thumbnailPath: thumbnailFilePath,
+          description: req.body[`imageDescription-${i}`] || '',
+        });
+        await newMedia.save();
+
+        artwork.images.push({
+          mediaId: newMedia._id,
+          isMain,
+        });
       }
     }
     
@@ -1008,5 +998,337 @@ exports.deleteComment = async (req, res) => {
     console.error(error);
     req.flash('error', 'Error deleting comment.');
     res.redirect('back');
+  }
+};
+
+// Create Media Backup
+async function createMediaBackupLogic() {
+  try {
+    const mediaItems = await Media.find({});
+    if (mediaItems.length === 0) {
+      console.log('No media items to backup.');
+      return { success: false, message: 'No media items to backup.' };
+    }
+
+    const backup = new Backup({
+      backupDate: new Date(),
+      mediaItems: mediaItems.filter(item => 
+        item.originalMediaId && item.fileName && item.originalName && item.fileType && item.fileSize && item.filePath
+      ).map(item => ({
+        originalMediaId: item._id,
+        fileName: item.fileName,
+        originalName: item.originalName,
+        fileType: item.fileType,
+        fileSize: item.fileSize,
+        filePath: item.filePath,
+        description: item.description,
+        thumbnailPath: item.thumbnailPath,
+      })),
+    });
+    await backup.save();
+    console.log('Media backup created successfully.');
+    return { success: true, message: 'Media backup created successfully.' };
+  } catch (error) {
+    console.error('Error creating media backup:', error);
+    return { success: false, message: 'Error creating media backup.' };
+  }
+}
+
+exports.createMediaBackup = async (req, res) => {
+  const result = await createMediaBackupLogic();
+  if (result.success) {
+    req.flash('success', result.message);
+  } else {
+    req.flash('error', result.message);
+  }
+  res.redirect('/admin/media');
+};
+
+// Get Media Management Page
+exports.getMediaManagement = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Fetch standalone media
+    const standaloneMedia = await Media.find().sort({ uploadDate: -1 });
+
+    // Fetch media from artworks
+    const artworks = await Artwork.find().select('images video');
+    let artworkMedia = [];
+
+    artworks.forEach(artwork => {
+      if (artwork.images && Array.isArray(artwork.images)) {
+        artwork.images.forEach(image => {
+          const mediaPath = image.path || image.filePath;
+          if (mediaPath) {
+            artworkMedia.push({
+              _id: image.mediaId || new mongoose.Types.ObjectId(), // Use existing mediaId or generate new one
+              fileName: mediaPath.split('/').pop(),
+              fileType: 'image/' + mediaPath.split('.').pop(), // Infer type from extension
+              filePath: mediaPath, // Use path or filePath
+              description: image.description || 'Artwork Image',
+              uploadDate: artwork.createdAt,
+              isArtworkMedia: true,
+              artworkId: artwork._id
+            });
+          }
+        });
+      }
+      if (artwork.video && (artwork.video.type === 'file' || artwork.video.type === 'upload')) {
+        artworkMedia.push({
+          _id: artwork.video.mediaId || new mongoose.Types.ObjectId(),
+          fileName: artwork.video.path.split('/').pop(),
+          fileType: artwork.video.fileType,
+          filePath: artwork.video.path,
+          description: artwork.video.description || 'Artwork Video',
+          uploadDate: artwork.createdAt,
+          isArtworkMedia: true,
+          artworkId: artwork._id,
+        });
+      }
+    });
+
+    // Combine all media and sort by uploadDate
+    let allMedia = [...standaloneMedia, ...artworkMedia];
+    allMedia.sort((a, b) => b.uploadDate - a.uploadDate);
+
+    const totalMedia = allMedia.length;
+    const totalPages = Math.ceil(totalMedia / limit);
+    const paginatedMedia = allMedia.slice(skip, skip + limit);
+
+    const lastBackup = await Backup.findOne().sort({ backupDate: -1 });
+
+    res.render('admin/media-management', {
+      title: 'Media Management',
+      media: paginatedMedia,
+      currentPage: page,
+      totalPages,
+      totalMedia,
+      limit,
+      lastBackup,
+      messages: req.flash(),
+    });
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Error fetching media management data.');
+    res.redirect('/admin');
+  }
+};
+
+exports.getBackupHistory = async (req, res) => {
+  try {
+    const backups = await Backup.find().sort({ backupDate: -1 });
+    res.render('admin/backup-history', { backups, messages: req.flash() });
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Error fetching backup history.');
+    res.redirect('/admin/media');
+  }
+};
+
+// Upload Media
+// const { createMediaBackup } = require('./adminController'); // Import createMediaBackup - REMOVE THIS LINE
+let uploadCount = 0; // Initialize upload counter
+const AUTO_BACKUP_THRESHOLD = 5; // Trigger backup after 5 uploads
+
+exports.uploadMedia = async (req, res) => {
+    try {
+      // Ensure upload directory exists
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      if (!req.files || req.files.length === 0) {
+        req.flash('error', 'No files selected for upload.');
+        return res.redirect('/admin/media');
+      }
+  
+      const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/webm', 'video/ogg'];
+      const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+  
+      const uploadedMedia = [];
+      for (const file of req.files) {
+        // File type validation
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+          req.flash('error', `File type not allowed: ${file.originalname}. Only images (JPEG, PNG, GIF) and videos (MP4, WebM, Ogg) are permitted.`);
+          return res.redirect('/admin/media');
+        }
+  
+        // File size validation
+        if (file.size > MAX_FILE_SIZE) {
+          req.flash('error', `File too large: ${file.originalname}. Maximum size is 50MB.`);
+          return res.redirect('/admin/media');
+        }
+  
+        // Generate a unique filename
+        const uniqueFilename = `${Date.now()}-${file.originalname}`;
+        const filePath = path.join(uploadDir, uniqueFilename);
+
+        // Save the file to the file system
+        await fs.promises.writeFile(filePath, file.buffer);
+
+        // Duplicate upload check (based on file name and size) - now checks against the new unique filename
+        const existingMedia = await Media.findOne({ fileName: uniqueFilename, fileSize: file.size });
+        if (existingMedia) {
+          // If duplicate, remove the newly saved file
+          await fs.promises.unlink(filePath);
+          req.flash('error', `Duplicate file detected: ${file.originalname}. A file with the same content already exists.`);
+          return res.redirect('/admin/media');
+        }
+  
+        const newMedia = new Media({
+          fileName: uniqueFilename,
+          originalName: file.originalname,
+          fileType: file.mimetype,
+          fileSize: file.size,
+          filePath: `/uploads/${uniqueFilename}`, // Store the relative path
+          description: req.body.description || '',
+        });
+
+        // Generate thumbnail for images
+        if (file.mimetype.startsWith('image/')) {
+          const thumbnailDir = './public/uploads/thumbnails';
+          if (!fs.existsSync(thumbnailDir)) {
+            fs.mkdirSync(thumbnailDir, { recursive: true });
+          }
+          const thumbnailFilename = `thumb-${uniqueFilename}`;
+          await sharp(file.buffer)
+            .resize(300, 300, { fit: 'inside' })
+            .toFile(path.join('public', 'uploads', 'thumbnails', thumbnailFilename));
+          newMedia.thumbnailPath = `/uploads/thumbnails/${thumbnailFilename}`;
+        }
+        
+        await newMedia.save();
+        uploadedMedia.push(newMedia);
+      }
+  
+      uploadCount += uploadedMedia.length;
+      if (uploadCount >= AUTO_BACKUP_THRESHOLD) {
+        const backupResult = await createMediaBackupLogic(); // Trigger backup
+        if (backupResult.success) {
+          uploadCount = 0; // Reset counter
+          req.flash('info', 'Automatic media backup created.');
+        } else {
+          req.flash('error', `Automatic backup failed: ${backupResult.message}`);
+        }
+      }
+  
+      req.flash('success', `${uploadedMedia.length} media item(s) uploaded successfully.`);
+      res.redirect('/admin/media');
+    } catch (error) {
+      console.error('Error uploading media:', error);
+      req.flash('error', 'Error uploading media.');
+      res.redirect('/admin/media');
+    }
+};
+
+// Delete Media
+exports.deleteMedia = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deletedMedia = await Media.findByIdAndDelete(id);
+  
+      if (!deletedMedia) {
+        req.flash('error', 'Media not found.');
+        return res.redirect('/admin/media');
+      }
+  
+      req.flash('success', 'Media deleted successfully.');
+      res.redirect('/admin/media');
+    } catch (error) {
+      console.error('Error deleting media:', error);
+      req.flash('error', 'Error deleting media.');
+      res.redirect('/admin/media');
+    }
+};
+
+exports.restoreMediaBackup = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const backup = await Backup.findById(id);
+  
+      if (!backup) {
+        req.flash('error', 'Backup not found.');
+        return res.redirect('/admin/media/backup-history');
+      }
+  
+      // Clear current media collection
+      await Media.deleteMany({});
+  
+      // Restore media from backup
+      for (const mediaItem of backup.mediaItems) {
+        // Create a new Media document from the backup data
+        const newMedia = new Media({
+          fileName: mediaItem.fileName,
+          fileType: mediaItem.fileType,
+          fileSize: mediaItem.fileSize,
+          mediaData: mediaItem.mediaData,
+          description: mediaItem.description,
+          uploadDate: mediaItem.uploadDate, // Preserve original upload date
+        });
+        await newMedia.save();
+      }
+  
+      req.flash('success', 'Media restored successfully from backup.');
+      res.redirect('/admin/media');
+    } catch (err) {
+      console.error(err);
+      req.flash('error', 'Error restoring media from backup.');
+      res.redirect('/admin/media/backup-history');
+    }
+};
+
+// ...
+
+// Regenerate thumbnails for existing images
+exports.regenerateThumbnails = async (req, res) => {
+  try {
+    const artworks = await Artwork.find().populate('images.mediaId');
+    let updatedCount = 0;
+
+    for (const artwork of artworks) {
+      for (const image of artwork.images) {
+        if (image.mediaId) {
+          console.log(`Processing Media ID: ${image.mediaId._id}`);
+          console.log(`  File Path: ${image.mediaId.filePath}`);
+          console.log(`  Thumbnail Path: ${image.mediaId.thumbnailPath}`);
+
+          if (!image.mediaId.thumbnailPath) {
+            // Check if the original file exists
+            const originalFilePath = path.join(__dirname, '../public', image.mediaId.filePath);
+            if (fs.existsSync(originalFilePath)) {
+              const thumbnailDir = path.join(__dirname, '../public/uploads/thumbnails');
+              if (!fs.existsSync(thumbnailDir)) {
+                fs.mkdirSync(thumbnailDir, { recursive: true });
+              }
+
+              const uniqueFilename = image.mediaId.fileName;
+              const thumbnailFilename = `thumb-${uniqueFilename}`;
+              const thumbnailFullPath = path.join(thumbnailDir, thumbnailFilename);
+
+              await sharp(originalFilePath)
+                .resize(300, 300, { fit: 'inside' })
+                .toFile(thumbnailFullPath);
+
+              image.mediaId.thumbnailPath = `/uploads/thumbnails/${thumbnailFilename}`;
+              await image.mediaId.save();
+              await artwork.save();
+              updatedCount++;
+            } else {
+              console.warn(`Original file not found for mediaId ${image.mediaId._id}: ${originalFilePath}`);
+            }
+          }
+        }
+      }
+    }
+
+    req.flash('success_msg', `Successfully regenerated ${updatedCount} thumbnails.`);
+    res.redirect('/admin/media');
+  } catch (error) {
+    console.error('Error regenerating thumbnails:', error);
+    req.flash('error_msg', 'Error regenerating thumbnails.');
+    res.redirect('/admin/media');
   }
 };

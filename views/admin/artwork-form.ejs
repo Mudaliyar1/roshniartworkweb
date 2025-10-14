@@ -54,7 +54,7 @@
                 <% artwork.images.forEach((image, index) => { %>
                   <div class="col-md-4 col-sm-6" data-image-id="<%= image._id %>">
                     <div class="card h-100 <%= image.isMain ? 'border-primary' : '' %>">
-                      <img src="<%= image.path %>" class="card-img-top" alt="Artwork image" style="height: 150px; object-fit: cover;">
+                      <img src="<%= image.mediaId && image.mediaId.filePath %>" class="card-img-top" alt="Artwork image" style="height: 150px; object-fit: cover;">
                       <div class="card-body p-2">
                         <div class="form-check mb-2">
                           <input class="form-check-input main-image-radio" type="radio" name="mainImage" id="mainImage<%= index %>" value="<%= image._id %>" <%= image.isMain ? 'checked' : '' %>>

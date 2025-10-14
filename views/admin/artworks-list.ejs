@@ -56,7 +56,7 @@
                 <td>
                   <% const mainImage = artwork.images.find(img => img.isMain) || artwork.images[0]; %>
                   <% if (mainImage) { %>
-                    <img src="<%= mainImage.thumbnailPath || mainImage.path %>" alt="<%= artwork.title %>" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                    <img src="<%= mainImage.mediaId.thumbnailPath || mainImage.mediaId.filePath %>" alt="<%= artwork.title %>" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
                   <% } else { %>
                     <div class="bg-secondary" style="width: 60px; height: 60px;"></div>
                   <% } %>

@@ -18,9 +18,11 @@
         <div id="artworkCarousel" class="carousel slide mb-4" data-bs-ride="false">
           <div class="carousel-inner">
             <% artwork.images.forEach((image, index) => { %>
-              <div class="carousel-item <%= index === 0 ? 'active' : '' %>" style="height: 500px;">
-                <img src="<%= image.path %>" class="d-block w-100 h-100" style="object-fit: contain;" alt="<%= artwork.title %> - Image <%= index + 1 %>">
-              </div>
+              <% if (image.mediaId && image.mediaId.filePath) { %>
+                <div class="carousel-item <%= index === 0 ? 'active' : '' %>" style="height: 500px;">
+                  <img src="<%= image.mediaId.filePath %>" class="d-block w-100 h-100" style="object-fit: contain;" alt="<%= artwork.title %> - Image <%= index + 1 %>">
+                </div>
+              <% } %>
             <% }); %>
           </div>
           <% if (artwork.images.length > 1) { %>
@@ -38,12 +40,14 @@
         <% if (artwork.images.length > 1) { %>
           <div class="row g-2 mb-4">
             <% artwork.images.forEach((image, index) => { %>
-              <div class="col-3 col-md-2">
-                <img src="<%= image.thumbnailPath || image.path %>" class="img-thumbnail cursor-pointer" 
-                     style="height: 60px; object-fit: cover; cursor: pointer;" 
-                     data-bs-target="#artworkCarousel" data-bs-slide-to="<%= index %>" 
-                     alt="Thumbnail <%= index + 1 %>">
-              </div>
+              <% if (image.mediaId && (image.mediaId.thumbnailPath || image.mediaId.filePath)) { %>
+                <div class="col-3 col-md-2">
+                  <img src="<%= image.mediaId.thumbnailPath || image.mediaId.filePath %>" class="img-thumbnail cursor-pointer" 
+                       style="height: 60px; object-fit: cover; cursor: pointer;" 
+                       data-bs-target="#artworkCarousel" data-bs-slide-to="<%= index %>" 
+                       alt="Thumbnail <%= index + 1 %>">
+                </div>
+              <% } %>
             <% }); %>
           </div>
         <% } %>

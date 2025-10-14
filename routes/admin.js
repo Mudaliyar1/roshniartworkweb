@@ -3,9 +3,10 @@ const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
 const upload = require('../middleware/upload');
+const { isAuthenticated, isAdmin, authMiddleware } = require('../middleware/auth');
 
 // About page management
-router.get('/about', adminController.getEditAbout);
+router.get('/about', isAuthenticated, isAdmin, adminController.getEditAbout);
 router.post('/about', upload.single('profileImage'), adminController.updateAbout);
 
 // Admin dashboard
@@ -47,6 +48,17 @@ router.delete('/messages/:id', adminController.deleteMessage);
 router.post('/messages/:id/delete', adminController.deleteMessageForm);
 router.post('/messages/export', adminController.exportMessages);
 
+// Media Management Routes
+router.get('/media', isAuthenticated, isAdmin, adminController.getMediaManagement);
+router.post('/media/upload', isAuthenticated, isAdmin, upload.array('mediaFiles'), adminController.uploadMedia);
+router.post('/media/backup', isAuthenticated, isAdmin, adminController.createMediaBackup);
+router.delete('/media/:id', isAuthenticated, isAdmin, adminController.deleteMedia);
+router.get('/media/backup-history', isAuthenticated, isAdmin, adminController.getBackupHistory);
+router.post('/media/restore/:id', isAuthenticated, isAdmin, adminController.restoreMediaBackup);
+
 // Site styling
+
+// Temporary route to regenerate thumbnails
+router.get('/regenerate-thumbnails', isAuthenticated, adminController.regenerateThumbnails);
 
 module.exports = router;

@@ -1,31 +1,17 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const Media = require('../models/Media'); // Import the Media model
 
-// Set storage engine
+// Set storage engine to memory storage
 const storage = multer.diskStorage({
-  destination: function(req, file, cb) {
-    let uploadPath;
-    
-    // Determine upload path based on file type
-    if (file.fieldname === 'logo') {
-      uploadPath = './public/uploads/images';
-    } else if (file.mimetype.startsWith('image/')) {
-      uploadPath = './public/uploads/images';
-    } else if (file.mimetype.startsWith('video/')) {
-      uploadPath = './public/uploads/videos';
-    } else {
-      uploadPath = './public/uploads';
-    }
-    
-    // Create directory if it doesn't exist
+  destination: function (req, file, cb) {
+    const uploadPath = path.join(__dirname, '../public/uploads');
     fs.mkdirSync(uploadPath, { recursive: true });
-    
     cb(null, uploadPath);
   },
-  filename: function(req, file, cb) {
-    // Generate unique filename with timestamp
-    cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`);
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
   }
 });
 
