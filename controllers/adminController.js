@@ -208,7 +208,7 @@ exports.getDashboard = async (req, res) => {
     
     try {
       // Count media files (images and videos)
-      const artworks = await Artwork.find().select('images video').populate('images.mediaId').populate('video.mediaId');
+      const artworks = await Artwork.find().select('images video').populate('images.mediaId');
       artworks.forEach(artwork => {
         if (artwork.images && Array.isArray(artwork.images)) {
           mediaCount += artwork.images.length;
@@ -1010,11 +1010,31 @@ async function createMediaBackupLogic() {
       return { success: false, message: 'No media items to backup.' };
     }
 
-    const backup = new Backup({
-      backupDate: new Date(),
-      mediaItems: mediaItems.filter(item => 
-        item.originalMediaId && item.fileName && item.originalName && item.fileType && item.fileSize && item.filePath
-      ).map(item => ({
+    // Filter out media items with missing required fields
+    const validMediaItems = mediaItems.filter(item => {
+      const hasAllFields = item._id && item.fileName && item.originalName && 
+                          item.fileType && item.fileSize && item.filePath;
+      if (!hasAllFields) {
+        console.warn(`Skipping media item due to missing required fields:`, {
+          id: item._id,
+          fileName: item.fileName,
+          originalName: item.originalName,
+          fileType: item.fileType,
+          fileSize: item.fileSize,
+          filePath: item.filePath
+        });
+      }
+      return hasAllFields;
+    });
+
+    if (validMediaItems.length === 0) {
+      console.log('No valid media items to backup after filtering.');
+      return { success: false, message: 'No valid media items to backup after filtering.' };
+    }
+
+    // Create individual backup documents for each valid media item
+    const backupPromises = validMediaItems.map(item => {
+      const backupData = {
         originalMediaId: item._id,
         fileName: item.fileName,
         originalName: item.originalName,
@@ -1023,11 +1043,15 @@ async function createMediaBackupLogic() {
         filePath: item.filePath,
         description: item.description,
         thumbnailPath: item.thumbnailPath,
-      })),
+        backupDate: new Date()
+      };
+      
+      return new MediaBackup(backupData).save();
     });
-    await backup.save();
-    console.log('Media backup created successfully.');
-    return { success: true, message: 'Media backup created successfully.' };
+
+    await Promise.all(backupPromises);
+    console.log(`Media backup created successfully for ${validMediaItems.length} items.`);
+    return { success: true, message: `Media backup created successfully for ${validMediaItems.length} items.` };
   } catch (error) {
     console.error('Error creating media backup:', error);
     return { success: false, message: 'Error creating media backup.' };
@@ -1098,7 +1122,7 @@ exports.getMediaManagement = async (req, res) => {
     const totalPages = Math.ceil(totalMedia / limit);
     const paginatedMedia = allMedia.slice(skip, skip + limit);
 
-    const lastBackup = await Backup.findOne().sort({ backupDate: -1 });
+    const lastBackup = await MediaBackup.findOne().sort({ backupDate: -1 });
 
     res.render('admin/media-management', {
       title: 'Media Management',
@@ -1119,7 +1143,7 @@ exports.getMediaManagement = async (req, res) => {
 
 exports.getBackupHistory = async (req, res) => {
   try {
-    const backups = await Backup.find().sort({ backupDate: -1 });
+    const backups = await MediaBackup.find().sort({ backupDate: -1 });
     res.render('admin/backup-history', { backups, messages: req.flash() });
   } catch (err) {
     console.error(err);
@@ -1247,7 +1271,7 @@ exports.deleteMedia = async (req, res) => {
 exports.restoreMediaBackup = async (req, res) => {
     try {
       const { id } = req.params;
-      const backup = await Backup.findById(id);
+      const backup = await MediaBackup.findById(id);
   
       if (!backup) {
         req.flash('error', 'Backup not found.');
