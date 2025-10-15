@@ -1,33 +1,3 @@
-<div class="container mt-5">
-  <h1 class="mb-4 text-center">Gallery</h1>
-
-  <div class="row row-cols-1 row-cols-md-3 g-4">
-    <% if (media && media.length > 0) { %>
-      <% media.forEach(item => { %>
-        <div class="col">
-          <div class="card h-100">
-            <% if (item.fileType.startsWith('image/')) { %>
-              <img src="data:<%= item.fileType %>;base64,<%= item.mediaData %>" class="card-img-top" alt="<%= item.fileName %>">
-            <% } else if (item.fileType.startsWith('video/')) { %>
-              <video controls class="card-img-top">
-                <source src="data:<%= item.fileType %>;base64,<%= item.mediaData %>" type="<%= item.fileType %>">
-                Your browser does not support the video tag.
-              </video>
-            <% } %>
-            <div class="card-body">
-              <h5 class="card-title"><%= item.fileName %></h5>
-              <p class="card-text"><%= item.description %></p>
-              <p class="card-text"><small class="text-muted">Uploaded on: <%= new Date(item.uploadDate).toLocaleDateString() %></small></p>
-            </div>
-          </div>
-        </div>
-      <% }); %>
-    <% } else { %>
-      <p class="text-center">No media uploaded yet.</p>
-    <% } %>
-  </div>
-</div>
-
 <div class="container py-5">
   <!-- Gallery Header -->
   <div class="hero-section text-center mb-5">
@@ -97,7 +67,7 @@
             <% const mainImage = artwork.images.find(img => img.isMain) || artwork.images[0]; %>
             <% if (mainImage) { %>
                 <div style="height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-top-left-radius: .5rem; border-top-right-radius: .5rem; background: #fff;">
-                  <img src="<%= mainImage.mediaId && (mainImage.mediaId.thumbnailPath || mainImage.mediaId.filePath) %>" class="img-fluid" alt="<%= artwork.title %>" style="max-height: 90%; width: auto; object-fit: contain; margin: auto;">
+                  <img src="<%= mainImage.thumbnailPath || mainImage.path %>" class="img-fluid" alt="<%= artwork.title %>" style="max-height: 90%; width: auto; object-fit: contain; margin: auto;">
                 </div>
             <% } else { %>
               <div class="bg-secondary" style="height: 250px;"></div>

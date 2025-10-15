@@ -3,7 +3,6 @@ const Message = require('../models/Message');
 const sanitizeHtml = require('sanitize-html');
 const About = require('../models/About');
 const User = require('../models/User');
-const Media = require('../models/Media');
 
 // Home page
 exports.getHomePage = async (req, res) => {
@@ -39,54 +38,53 @@ exports.getAboutPage = async (req, res) => {
 // Gallery page
 exports.getGalleryPage = async (req, res) => {
   try {
-    const perPage = 9;
     const page = parseInt(req.query.page) || 1;
-    const search = req.query.search || '';
-    const tag = req.query.tag || '';
-    const year = req.query.year || '';
-
-    let query = { visibility: 'public' };
-
-    if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-      ];
+    const limit = 12;
+    const skip = (page - 1) * limit;
+    
+    // Filter options - show both public and hidden artworks
+    const filter = { visibility: { $in: ['public', 'hidden'] } };
+    
+    if (req.query.tag) {
+      filter.tags = req.query.tag;
     }
-
-    if (tag) {
-      query.tags = tag;
+    
+    if (req.query.year) {
+      filter.year = req.query.year;
     }
-
-    if (year) {
-      query.year = year;
+    
+    if (req.query.search) {
+      filter.title = { $regex: req.query.search, $options: 'i' };
     }
-
-    const artworks = await Artwork.find(query)
-      .populate('images.mediaId')
-      .sort({ year: -1, createdAt: -1 })
-      .skip(perPage * (page - 1))
-      .limit(perPage);
-
-    const totalArtworks = await Artwork.countDocuments(query);
-    const totalPages = Math.ceil(totalArtworks / perPage);
-
-    // Get all unique tags and years for filters
-    const allTags = await Artwork.distinct('tags', { visibility: 'public' });
-    const allYears = await Artwork.distinct('year', { visibility: 'public' });
-
+    
+    // Get artworks
+    const artworks = await Artwork.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    
+    // Get total count for pagination
+    const total = await Artwork.countDocuments(filter);
+    
+    // Get all tags and years for filters - include both public and hidden
+    const tags = await Artwork.distinct('tags', { visibility: { $in: ['public', 'hidden'] } });
+    const years = await Artwork.distinct('year', { visibility: { $in: ['public', 'hidden'] } });
+    
     res.render('gallery', {
       title: 'Gallery',
-      layout: 'layouts/main',
       artworks,
       currentPage: page,
-      totalPages,
-      search,
-      tag,
-      year,
-      tags: allTags,
-      years: allYears,
-      media: [] // Keep media as an empty array for now, as artworks will handle images
+      totalPages: Math.ceil(total / limit),
+      tags,
+      years,
+      search: req.query.search || '',
+      tag: req.query.tag || '',
+      year: req.query.year || '',
+      filter: {
+        tag: req.query.tag || '',
+        year: req.query.year || '',
+        search: req.query.search || ''
+      }
     });
   } catch (error) {
     console.error('Gallery page error:', error);
@@ -103,7 +101,7 @@ exports.getArtworkDetail = async (req, res) => {
     const artwork = await Artwork.findOne({
       slug: req.params.slug,
       visibility: 'public'
-    }).populate('comments').populate('likes').populate('images.mediaId');
+    }).populate('comments').populate('likes');
     
     if (!artwork) {
       return res.status(404).render('error', {

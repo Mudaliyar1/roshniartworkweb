@@ -24,14 +24,12 @@ const ArtworkSchema = new mongoose.Schema({
     trim: true
   }],
   images: [{
-    mediaId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Media'
-    },
+    path: String,
     isMain: {
       type: Boolean,
       default: false
-    }
+    },
+    thumbnailPath: String
   }],
   video: {
     type: {

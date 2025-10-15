@@ -24,50 +24,10 @@ const { injectSiteStyles } = require('./middleware/styles');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// const mongoose = require('mongoose'); // Remove this duplicate declaration
-
-// Import models
-const Media = require('./models/Media');
-const MediaBackup = require('./models/MediaBackup');
-
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('MongoDB connected');
-    // Auto-restore media on server startup
-    restoreMediaOnStartup();
-  })
+  .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
-
-// Function to restore media from backup on startup
-async function restoreMediaOnStartup() {
-  try {
-    const mediaCount = await Media.countDocuments();
-    if (mediaCount === 0) {
-      console.log('Media collection is empty. Attempting to restore from backup...');
-      const backupItems = await MediaBackup.find({});
-      if (backupItems.length > 0) {
-        const restoredMedia = backupItems.map(item => ({
-          fileName: item.fileName,
-          fileType: item.fileType,
-          fileSize: item.fileSize,
-          uploadDate: item.uploadDate,
-          mediaData: item.mediaData,
-          description: item.description,
-          thumbnailPath: item.thumbnailPath,
-        }));
-        await Media.insertMany(restoredMedia);
-        console.log(`🧠 Auto-Restore: ${restoredMedia.length} media items restored from MongoDB backup successfully.`);
-      } else {
-        console.log('No media items found in backup to restore.');
-      }
-    } else {
-      console.log(`Media collection contains ${mediaCount} items. No restore needed.`);
-    }
-  } catch (error) {
-    console.error('Error during auto-restore:', error);
-  }
-}
 
 // Middleware
 app.use(helmet({
@@ -117,10 +77,8 @@ app.use(flash());
 
 // Global variables
 app.use((req, res, next) => {
-  res.locals.messages = {
-    success: req.flash('success_msg'),
-    error: req.flash('error_msg')
-  };
+  res.locals.success_msg = req.flash('success_msg');
+  res.locals.error_msg = req.flash('error_msg');
   res.locals.user = req.session.user || null;
   req.user = req.session.user || null; // Populate req.user
   next();
