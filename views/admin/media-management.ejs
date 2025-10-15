@@ -2,60 +2,13 @@
   <h1 class="admin-dashboard-title">Media Management</h1>
   <%- include('../partials/messages') %>
 
-  <!-- Backup/Restore Controls -->
-  <div class="card shadow mb-4">
-    <div class="card-header py-3">
-      <h6 class="m-0 font-weight-bold text-primary">🧠 Media Storage Management</h6>
-    </div>
-    <div class="card-body">
-      <div class="row">
-        <div class="col-md-4 mb-3">
-          <form action="/admin/media/backup" method="POST" class="d-inline">
-            <button type="submit" class="btn btn-primary btn-block">
-              <i class="fas fa-database"></i> 🧩 Create Backup Now
-            </button>
-          </form>
-        </div>
-        <div class="col-md-4 mb-3">
-          <form action="/admin/media/restore" method="POST" class="d-inline">
-            <button type="submit" class="btn btn-success btn-block">
-              <i class="fas fa-sync"></i> 🔁 Restore Media
-            </button>
-          </form>
-        </div>
-        <div class="col-md-4 mb-3">
-          <form action="/admin/media/auto-restore/toggle" method="POST" class="d-inline">
-            <button type="submit" class="btn btn-info btn-block">
-              <i class="fas fa-cog"></i> 🧠 Auto Restore On Startup
-            </button>
-          </form>
-        </div>
-      </div>
-      <% if (lastBackup) { %>
-        <div class="alert alert-info mt-3">
-          <small>Last backup: <%= new Date(lastBackup.backupDate).toLocaleString() %> | Files: <%= lastBackup.backupItems.length %></small>
-        </div>
-      <% } %>
-    </div>
-  </div>
-
   <!-- Media Display Panel -->
   <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
       <h6 class="m-0 font-weight-bold text-primary">Media Display Panel</h6>
-      <div>
-        <a href="/admin/media/sync-logs" class="btn btn-outline-secondary btn-sm mr-2">
-          <i class="fas fa-history"></i> View Sync Logs
-        </a>
-        <form action="/admin/media/backup" method="POST" class="d-inline mr-2">
-          <button type="submit" class="btn btn-primary btn-sm">Create Media Backup</button>
-        </form>
-        <form action="/admin/media/delete-all" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete ALL media files? This action cannot be undone.');">
-          <button type="submit" class="btn btn-danger btn-sm">
-            <i class="fas fa-trash"></i> Delete All Media
-          </button>
-        </form>
-      </div>
+      <form action="/admin/media/backup" method="POST">
+        <button type="submit" class="btn btn-primary btn-sm">Create Media Backup</button>
+      </form>
     </div>
     <div class="card-body">
       <div class="row">
