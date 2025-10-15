@@ -4,6 +4,7 @@ const Artwork = require('../models/Artwork');
 const Comment = require('../models/Comment');
 const Media = require('../models/Media'); // Import the Media model
 const MediaBackup = require('../models/MediaBackup'); // Import the Backup model
+const SyncLog = require('../models/SyncLog'); // Import the SyncLog model
 const User = require('../models/User');
 const Message = require('../models/Message');
 const SiteStyling = require('../models/SiteStyling');
@@ -13,6 +14,7 @@ const path = require('path');
 const fs = require('fs');
 const sanitizeHtml = require('sanitize-html');
 const { createObjectCsvWriter } = require('csv-writer');
+const { storeFileInDB, restoreFileFromDB, fileExistsOnDisk, autoRestoreMissingFiles } = require('../utils/mediaUtils');
 
 const uploadDir = path.join(__dirname, '../public/uploads');
 
@@ -399,27 +401,43 @@ exports.createArtwork = async (req, res) => {
         const file = req.files.images[i];
         const isMain = i === 0; // First image is main by default
 
-        const thumbnailDir = './public/uploads/thumbnails';
-        if (!fs.existsSync(thumbnailDir)) {
-          fs.mkdirSync(thumbnailDir, { recursive: true });
-        }
+        // Ensure upload directories exist
+        const uploadDir = path.join(__dirname, '../public/uploads');
+        const thumbnailDir = path.join(__dirname, '../public/uploads/thumbnails');
+        
+        await fs.promises.mkdir(uploadDir, { recursive: true });
+        await fs.promises.mkdir(thumbnailDir, { recursive: true });
 
-        const thumbnailFilename = `thumb-${file.filename}`;
-        await sharp(file.path)
+        // Generate a unique filename
+        const uniqueFilename = `${Date.now()}-${file.originalname}`;
+        const filePath = path.join(uploadDir, uniqueFilename);
+
+        // Save the file to the file system first
+        await fs.promises.writeFile(filePath, file.buffer);
+
+        // Generate thumbnail
+        const thumbnailFilename = `thumb-${uniqueFilename}`;
+        const thumbnailFilePath = path.join(thumbnailDir, thumbnailFilename);
+        
+        const thumbnailBuffer = await sharp(file.buffer)
           .resize(300, 300, { fit: 'inside' })
-          .toFile(path.join('public', 'uploads', 'thumbnails', thumbnailFilename));
-        const thumbnailFilePath = `/uploads/thumbnails/${thumbnailFilename}`;
+          .toBuffer();
+        
+        // Save thumbnail to filesystem
+        await fs.promises.writeFile(thumbnailFilePath, thumbnailBuffer);
+        
+        const thumbnailRelativePath = `/uploads/thumbnails/${thumbnailFilename}`;
 
         const newMedia = new Media({
-          fileName: file.originalname,
+          fileName: uniqueFilename,
           originalName: file.originalname,
           fileType: file.mimetype,
           fileSize: file.size,
-          filePath: `/uploads/${file.filename}`, // Use file.filename directly for consistency
-          thumbnailPath: thumbnailFilePath, // Set thumbnailPath here
+          filePath: `/uploads/${uniqueFilename}`,
+          thumbnailPath: thumbnailRelativePath,
           description: req.body[`imageDescription-${i}`] || '',
         });
-        await newMedia.save(); // Save newMedia after thumbnailPath is set
+        await newMedia.save();
 
         newArtwork.images.push({
           mediaId: newMedia._id,
@@ -519,24 +537,40 @@ exports.updateArtwork = async (req, res) => {
         const file = req.files.images[i];
         const isMain = req.body[`mainImage-${i}`] === 'on';
 
-        const thumbnailDir = './public/uploads/thumbnails';
-        if (!fs.existsSync(thumbnailDir)) {
-          fs.mkdirSync(thumbnailDir, { recursive: true });
-        }
+        // Ensure upload directories exist
+        const uploadDir = path.join(__dirname, '../public/uploads');
+        const thumbnailDir = path.join(__dirname, '../public/uploads/thumbnails');
+        
+        await fs.promises.mkdir(uploadDir, { recursive: true });
+        await fs.promises.mkdir(thumbnailDir, { recursive: true });
 
-        const thumbnailFilename = `thumb-${file.filename}`;
-        await sharp(file.path)
+        // Generate a unique filename
+        const uniqueFilename = `${Date.now()}-${file.originalname}`;
+        const filePath = path.join(uploadDir, uniqueFilename);
+
+        // Save the file to the file system first
+        await fs.promises.writeFile(filePath, file.buffer);
+
+        // Generate thumbnail
+        const thumbnailFilename = `thumb-${uniqueFilename}`;
+        const thumbnailFilePath = path.join(thumbnailDir, thumbnailFilename);
+        
+        const thumbnailBuffer = await sharp(file.buffer)
           .resize(300, 300, { fit: 'inside' })
-          .toFile(path.join('public', 'uploads', 'thumbnails', thumbnailFilename));
-        const thumbnailFilePath = `/uploads/thumbnails/${thumbnailFilename}`;
+          .toBuffer();
+        
+        // Save thumbnail to filesystem
+        await fs.promises.writeFile(thumbnailFilePath, thumbnailBuffer);
+        
+        const thumbnailRelativePath = `/uploads/thumbnails/${thumbnailFilename}`;
 
         const newMedia = new Media({
-          fileName: file.originalname,
+          fileName: uniqueFilename,
           originalName: file.originalname,
           fileType: file.mimetype,
           fileSize: file.size,
-          filePath: `/uploads/${file.filename}`,
-          thumbnailPath: thumbnailFilePath,
+          filePath: `/uploads/${uniqueFilename}`,
+          thumbnailPath: thumbnailRelativePath,
           description: req.body[`imageDescription-${i}`] || '',
         });
         await newMedia.save();
@@ -1122,7 +1156,12 @@ exports.getMediaManagement = async (req, res) => {
     const totalPages = Math.ceil(totalMedia / limit);
     const paginatedMedia = allMedia.slice(skip, skip + limit);
 
-    const lastBackup = await MediaBackup.findOne().sort({ backupDate: -1 });
+    // Get last sync operation info instead of old MediaBackup
+    const lastSync = await SyncLog.findOne().sort({ timestamp: -1 });
+    const lastBackupInfo = lastSync ? {
+      backupDate: lastSync.timestamp,
+      backupItems: { length: await SyncLog.countDocuments({ operation: 'backup', status: 'success' }) }
+    } : null;
 
     res.render('admin/media-management', {
       title: 'Media Management',
@@ -1131,7 +1170,7 @@ exports.getMediaManagement = async (req, res) => {
       totalPages,
       totalMedia,
       limit,
-      lastBackup,
+      lastBackup: lastBackupInfo,
       messages: req.flash(),
     });
   } catch (err) {
@@ -1159,10 +1198,12 @@ const AUTO_BACKUP_THRESHOLD = 5; // Trigger backup after 5 uploads
 
 exports.uploadMedia = async (req, res) => {
     try {
-      // Ensure upload directory exists
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
+      // Ensure upload directories exist
+      const uploadDir = path.join(__dirname, '../public/uploads');
+      const thumbnailDir = path.join(__dirname, '../public/uploads/thumbnails');
+      
+      await fs.promises.mkdir(uploadDir, { recursive: true });
+      await fs.promises.mkdir(thumbnailDir, { recursive: true });
 
       if (!req.files || req.files.length === 0) {
         req.flash('error', 'No files selected for upload.');
@@ -1190,10 +1231,10 @@ exports.uploadMedia = async (req, res) => {
         const uniqueFilename = `${Date.now()}-${file.originalname}`;
         const filePath = path.join(uploadDir, uniqueFilename);
 
-        // Save the file to the file system
+        // Save the file to the file system first
         await fs.promises.writeFile(filePath, file.buffer);
 
-        // Duplicate upload check (based on file name and size) - now checks against the new unique filename
+        // Duplicate upload check (based on file name and size)
         const existingMedia = await Media.findOne({ fileName: uniqueFilename, fileSize: file.size });
         if (existingMedia) {
           // If duplicate, remove the newly saved file
@@ -1212,19 +1253,30 @@ exports.uploadMedia = async (req, res) => {
         });
 
         // Generate thumbnail for images
+        let thumbnailBuffer = null;
         if (file.mimetype.startsWith('image/')) {
-          const thumbnailDir = './public/uploads/thumbnails';
-          if (!fs.existsSync(thumbnailDir)) {
-            fs.mkdirSync(thumbnailDir, { recursive: true });
-          }
           const thumbnailFilename = `thumb-${uniqueFilename}`;
-          await sharp(file.buffer)
+          const thumbnailFilePath = path.join('public', 'uploads', 'thumbnails', thumbnailFilename);
+          
+          // Generate thumbnail using Sharp
+          thumbnailBuffer = await sharp(file.buffer)
             .resize(300, 300, { fit: 'inside' })
-            .toFile(path.join('public', 'uploads', 'thumbnails', thumbnailFilename));
+            .toBuffer();
+          
+          // Save thumbnail to filesystem
+          await fs.promises.writeFile(thumbnailFilePath, thumbnailBuffer);
           newMedia.thumbnailPath = `/uploads/thumbnails/${thumbnailFilename}`;
         }
-        
+
+        // Save media document first
         await newMedia.save();
+
+        // Store file data in MongoDB for persistence
+        const storeResult = await storeFileInDB(newMedia, file.buffer, thumbnailBuffer);
+        if (!storeResult.success) {
+          console.warn(`Warning: Failed to store file in database: ${storeResult.message}`);
+        }
+        
         uploadedMedia.push(newMedia);
       }
   
@@ -1353,6 +1405,143 @@ exports.regenerateThumbnails = async (req, res) => {
   } catch (error) {
     console.error('Error regenerating thumbnails:', error);
     req.flash('error_msg', 'Error regenerating thumbnails.');
+    res.redirect('/admin/media');
+  }
+};
+
+// New Media Storage Management Functions
+exports.restoreAllMedia = async (req, res) => {
+  try {
+    console.log('🔁 Manual Restore: Starting full media restoration from MongoDB...');
+    
+    const { syncAllMedia } = require('../utils/mediaUtils');
+    const result = await syncAllMedia('restore');
+    
+    console.log('📊 Manual Restore Result:', JSON.stringify(result, null, 2));
+    
+    // Check if restore was successful based on the results
+    const hasSuccess = result.success > 0;
+    const hasErrors = result.failed > 0 || (result.errors && result.errors.length > 0);
+    const hasProcessed = result.processed > 0 || result.success > 0 || result.skipped > 0;
+    
+    if (hasSuccess && !hasErrors) {
+      req.flash('success', `✅ Media restored successfully! ${result.success} files restored.`);
+      console.log(`✅ Manual Restore: Completed successfully. ${result.success} files restored.`);
+    } else if (hasSuccess && hasErrors) {
+      req.flash('warning', `⚠️ Media restore completed with issues. ${result.success} files restored, ${result.failed} failed.`);
+      console.warn(`⚠️ Manual Restore: Completed with errors. ${result.success} files restored, ${result.failed} failed.`);
+    } else if (hasProcessed) {
+      // All items were skipped (no binary data), but that's valid behavior
+      req.flash('info', `ℹ️ Media restore completed. ${result.skipped} files skipped (no backup data found), ${result.success} restored.`);
+      console.log(`ℹ️ Manual Restore: Completed. ${result.skipped} files skipped, ${result.success} restored.`);
+    } else {
+      let errorMessage = 'Unknown error';
+      if (result.errors && result.errors.length > 0) {
+        errorMessage = result.errors[0].error || result.errors[0].message || 'Unknown error';
+      } else if (result.total === 0) {
+        errorMessage = 'No media files found to restore';
+      }
+      req.flash('error', `❌ Media restore failed: ${errorMessage}`);
+      console.error(`❌ Manual Restore: Failed - ${errorMessage}`);
+    }
+    
+    res.redirect('/admin/media');
+  } catch (error) {
+    console.error('❌ Error during manual restore:', error);
+    req.flash('error', 'Error during media restore operation.');
+    res.redirect('/admin/media');
+  }
+};
+
+exports.getSyncLogs = async (req, res) => {
+  try {
+    const { getSyncLogs } = require('../utils/mediaUtils');
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    
+    const logs = await getSyncLogs(page, limit);
+    
+    res.render('admin/sync-logs', {
+      title: 'Media Sync Logs',
+      logs: logs.logs,
+      currentPage: page,
+      totalPages: Math.ceil(logs.total / limit),
+      totalLogs: logs.total,
+      limit,
+      messages: req.flash(),
+    });
+  } catch (error) {
+    console.error('Error fetching sync logs:', error);
+    req.flash('error', 'Error fetching sync logs.');
+    res.redirect('/admin/media');
+  }
+};
+
+exports.toggleAutoRestore = async (req, res) => {
+  try {
+    // This is a placeholder for auto-restore toggle functionality
+    // In a real implementation, you might store this setting in a config collection
+    req.flash('info', 'Auto-restore toggle functionality will be implemented in the next update.');
+    res.redirect('/admin/media');
+  } catch (error) {
+    console.error('Error toggling auto-restore:', error);
+    req.flash('error', 'Error toggling auto-restore setting.');
+    res.redirect('/admin/media');
+  }
+};
+
+// Delete All Media
+exports.deleteAllMedia = async (req, res) => {
+  try {
+    console.log('🗑️  Deleting all media files...');
+    
+    // Get all media items
+    const allMedia = await Media.find({});
+    let deletedCount = 0;
+    let errorCount = 0;
+    
+    // Delete each media item and its associated files
+    for (const media of allMedia) {
+      try {
+        // Skip if no filePath
+        if (!media.filePath) {
+          console.warn(`Skipping media ${media.fileName || 'unknown'} - no filePath`);
+          // Still delete from database
+          await Media.findByIdAndDelete(media._id);
+          deletedCount++;
+          continue;
+        }
+        
+        // Delete from filesystem if exists
+        const filePath = path.join(__dirname, '../public', media.filePath);
+        if (fs.existsSync(filePath)) {
+          await fs.promises.unlink(filePath);
+        }
+        
+        // Delete thumbnail if exists
+        if (media.thumbnailPath) {
+          const thumbnailPath = path.join(__dirname, '../public', media.thumbnailPath);
+          if (fs.existsSync(thumbnailPath)) {
+            await fs.promises.unlink(thumbnailPath);
+          }
+        }
+        
+        // Delete from database
+        await Media.findByIdAndDelete(media._id);
+        deletedCount++;
+        console.log(`Deleted media: ${media.fileName}`);
+      } catch (error) {
+        errorCount++;
+        console.error(`Error deleting media ${media.fileName || 'unknown'}:`, error);
+      }
+    }
+    
+    req.flash('success', `✅ Deleted ${deletedCount} media items${errorCount > 0 ? ` (${errorCount} errors)` : ''}.`);
+    console.log(`🗑️  Successfully deleted ${deletedCount} media items${errorCount > 0 ? ` with ${errorCount} errors` : ''}.`);
+    res.redirect('/admin/media');
+  } catch (error) {
+    console.error('Error deleting all media:', error);
+    req.flash('error', 'Error deleting all media items.');
     res.redirect('/admin/media');
   }
 };

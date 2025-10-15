@@ -56,6 +56,12 @@ router.delete('/media/:id', isAuthenticated, isAdmin, adminController.deleteMedi
 router.get('/media/backup-history', isAuthenticated, isAdmin, adminController.getBackupHistory);
 router.post('/media/restore/:id', isAuthenticated, isAdmin, adminController.restoreMediaBackup);
 
+// New Media Storage Management Routes
+router.post('/media/restore', isAuthenticated, isAdmin, adminController.restoreAllMedia);
+router.get('/media/sync-logs', isAuthenticated, isAdmin, adminController.getSyncLogs);
+router.post('/media/auto-restore/toggle', isAuthenticated, isAdmin, adminController.toggleAutoRestore);
+router.post('/media/delete-all', isAuthenticated, isAdmin, adminController.deleteAllMedia);
+
 // Site styling
 
 // Temporary route to regenerate thumbnails

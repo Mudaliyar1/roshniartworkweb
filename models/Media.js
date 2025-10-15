@@ -35,6 +35,23 @@ const mediaSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  // New fields for binary storage
+  fileData: {
+    type: Buffer, // Binary data of the file
+    required: false,
+  },
+  thumbnailData: {
+    type: Buffer, // Binary data of the thumbnail
+    required: false,
+  },
+  isStoredInDB: {
+    type: Boolean, // Indicates if binary data is stored in MongoDB
+    default: false,
+  },
+  lastSynced: {
+    type: Date, // Last time the file was synced from DB to filesystem
+    default: null,
+  },
 });
 
 module.exports = mongoose.model('Media', mediaSchema);

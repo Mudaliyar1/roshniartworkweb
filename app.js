@@ -30,6 +30,9 @@ const PORT = process.env.PORT || 3000;
 const Media = require('./models/Media');
 const MediaBackup = require('./models/MediaBackup');
 
+// Import media utilities
+const { autoRestoreMissingFiles, logSyncOperation } = require('./utils/mediaUtils');
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
@@ -42,9 +45,25 @@ mongoose.connect(process.env.MONGODB_URI)
 // Function to restore media from backup on startup
 async function restoreMediaOnStartup() {
   try {
+    console.log('🧠 Auto-Restore: Checking for missing media files...');
+    
+    // Use the new auto-restore function from mediaUtils
+    const result = await autoRestoreMissingFiles();
+    
+    if (result.restored > 0) {
+      console.log(`🧠 Auto-Restore: ${result.restored} media files restored successfully.`);
+      await logSyncOperation('auto_restore', 'startup', result.restored, 'success', 'Auto-restore completed successfully');
+    } else if (result.errors > 0) {
+      console.warn(`⚠️ Auto-Restore: ${result.errors} files failed to restore.`);
+      await logSyncOperation('auto_restore', 'startup', result.errors, 'warning', 'Auto-restore completed with errors');
+    } else {
+      console.log('✅ Auto-Restore: All media files are present. No restore needed.');
+    }
+    
+    // Also check if we need to restore from old backup system for backwards compatibility
     const mediaCount = await Media.countDocuments();
     if (mediaCount === 0) {
-      console.log('Media collection is empty. Attempting to restore from backup...');
+      console.log('Media collection is empty. Attempting to restore from legacy backup...');
       const backupItems = await MediaBackup.find({});
       if (backupItems.length > 0) {
         const restoredMedia = backupItems.map(item => ({
@@ -57,15 +76,12 @@ async function restoreMediaOnStartup() {
           thumbnailPath: item.thumbnailPath,
         }));
         await Media.insertMany(restoredMedia);
-        console.log(`🧠 Auto-Restore: ${restoredMedia.length} media items restored from MongoDB backup successfully.`);
-      } else {
-        console.log('No media items found in backup to restore.');
+        console.log(`🧠 Legacy Auto-Restore: ${restoredMedia.length} media items restored from legacy MongoDB backup successfully.`);
       }
-    } else {
-      console.log(`Media collection contains ${mediaCount} items. No restore needed.`);
     }
   } catch (error) {
-    console.error('Error during auto-restore:', error);
+    console.error('❌ Error during auto-restore:', error);
+    await logSyncOperation('auto_restore', 'startup', 0, 'error', `Auto-restore failed: ${error.message}`);
   }
 }
 
