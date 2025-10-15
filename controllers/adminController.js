@@ -608,46 +608,38 @@ exports.deleteArtwork = async (req, res) => {
       return res.redirect('/admin/artworks');
     }
     
-    // Delete image files and Media documents
+    // Delete image files
     for (const image of artwork.images) {
       try {
-        // Delete main image file
-        if (image.mediaId && image.mediaId.filePath) {
-          const imagePath = path.join('public', image.mediaId.filePath);
+        // Delete main image
+        if (image.path) {
+          const imagePath = path.join('public', image.path);
           if (fs.existsSync(imagePath)) {
             fs.unlinkSync(imagePath);
           }
         }
         
-        // Delete thumbnail file
-        if (image.mediaId && image.mediaId.thumbnailPath) {
-          const thumbnailPath = path.join('public', image.mediaId.thumbnailPath);
+        // Delete thumbnail
+        if (image.thumbnailPath) {
+          const thumbnailPath = path.join('public', image.thumbnailPath);
           if (fs.existsSync(thumbnailPath)) {
             fs.unlinkSync(thumbnailPath);
           }
         }
-
-        // Delete Media document
-        if (image.mediaId) {
-          await Media.deleteOne({ _id: image.mediaId._id });
-        }
       } catch (err) {
-        console.error('Error deleting image file or Media document:', err);
+        console.error('Error deleting image file:', err);
       }
     }
     
-    // Delete video file and Media document if uploaded
-    if (artwork.video.type === 'upload' && artwork.video.mediaId) {
+    // Delete video file if uploaded
+    if (artwork.video.type === 'upload' && artwork.video.path) {
       try {
-        if (artwork.video.path) {
-          const videoPath = path.join('public', artwork.video.path);
-          if (fs.existsSync(videoPath)) {
-            fs.unlinkSync(videoPath);
-          }
+        const videoPath = path.join('public', artwork.video.path);
+        if (fs.existsSync(videoPath)) {
+          fs.unlinkSync(videoPath);
         }
-        await Media.deleteOne({ _id: artwork.video.mediaId });
       } catch (err) {
-        console.error('Error deleting video file or Media document:', err);
+        console.error('Error deleting video file:', err);
       }
     }
     
@@ -1276,18 +1268,14 @@ exports.uploadMedia = async (req, res) => {
           newMedia.thumbnailPath = `/uploads/thumbnails/${thumbnailFilename}`;
         }
 
+        // Save media document first
+        await newMedia.save();
+
         // Store file data in MongoDB for persistence
         const storeResult = await storeFileInDB(newMedia, file.buffer, thumbnailBuffer);
         if (!storeResult.success) {
           console.warn(`Warning: Failed to store file in database: ${storeResult.message}`);
-          // If storing to DB fails, we should not save the media document
-          // and potentially delete any partially created files on disk if they exist.
-          // For now, we'll just skip saving the media document.
-          continue; // Skip to the next file if storeFileInDB fails
         }
-
-        // Save media document only after successful storage of file data
-        await newMedia.save();
         
         uploadedMedia.push(newMedia);
       }
